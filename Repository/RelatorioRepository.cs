@@ -79,6 +79,7 @@ namespace SistemasdeTarefas.Repository
                             {
                                 Relatorio relatorio = new Relatorio
                                 {
+                                    IDCartao =  reader.GetString(reader.GetOrdinal("IDCartao")),
                                     Nome = reader.GetString(reader.GetOrdinal("Nome")),
                                     Turma = reader.GetString(reader.GetOrdinal("Turma")),
                                     Data = reader.GetString(reader.GetOrdinal("Data")),
