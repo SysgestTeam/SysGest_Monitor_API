@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
-using SistemasdeTarefas.Repository;
 
 [ApiController]
 [Route("api/[controller]")]
