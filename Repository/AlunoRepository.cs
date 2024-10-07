@@ -62,14 +62,13 @@ namespace SistemasdeTarefas.Repository
                 connection.Open();
 
                 // Chame o procedimento armazenado
-                string sqlQuery = "sp_ListarAlunosPorClasseETurma";
 
-                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                using (SqlCommand cmd = new SqlCommand("sp_ListarAlunosPorClasseETurma", connection))
                 {
 
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(new SqlParameter("@IDCLASSE", idclasse));
-                    cmd.Parameters.Add(new SqlParameter("@IDTURMA", idclasse));
+                    cmd.Parameters.Add(new SqlParameter("@IDTURMA", idturma));
 
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
@@ -149,11 +148,12 @@ namespace SistemasdeTarefas.Repository
                         {
                             Turmas turma = new Turmas
                             {
-                                IDCLASSE = reader.GetInt32(0),
+
+                                IDTURMA = reader.GetInt32(0),
                                 NOME = reader.GetString(1),
-                                ANO = reader.GetInt32(2),
+                                IDCLASSE = reader.GetInt32(2),
                                 NUMVAGAS = reader.GetInt32(3),
-                                IDTURMA = reader.GetInt32(3),
+                                ANO = reader.GetInt32(4),
                             };
 
                             turmas.Add(turma);
