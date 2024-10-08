@@ -21,6 +21,15 @@ namespace SistemasdeTarefas.Controllers
             var existenciaCards = _existenciaCardRepository.GetExistenciaCard();
             return Ok(existenciaCards);
         }
+
+
+        [HttpGet("Com-cartao-filtro")]
+        public ActionResult<IEnumerable<Existencia_Card>> GetExistenciaCardFiltro(int? idclasse = null, int? idturma = null)
+        {
+            var existenciaCards = _existenciaCardRepository.GetInexistenciaCardFiltro(idclasse, idturma);
+            return Ok(existenciaCards);
+        }
+
         [HttpGet("Com-cartao-SemAcompanhante")]
         public ActionResult<IEnumerable<Existencia_Card>> GetExistenciaCard_SemAcompanhante()
         {

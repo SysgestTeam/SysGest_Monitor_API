@@ -150,5 +150,46 @@ namespace SistemasdeTarefas.Repository
             return inexistenciaCards;
         }
 
+        public IEnumerable<Existencia_Card> GetInexistenciaCardFiltro(int? idclasse = null, int? idturma = null)
+        {
+            List<Existencia_Card> alunos = new List<Existencia_Card>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Chame o procedimento armazenado
+
+                using (SqlCommand cmd = new SqlCommand("sp_ListarAlunosComCartaoPorClasseETurma", connection))
+                {
+
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(new SqlParameter("@IDCLASSE", idclasse));
+                    cmd.Parameters.Add(new SqlParameter("@IDTURMA", idturma));
+
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Existencia_Card aluno = new Existencia_Card
+                            {
+                                Nome = reader.GetString(1),
+                                NomeTurma = reader.GetString(2),
+                                Foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) // Verifica se a coluna é DBNull
+                            };
+                            if (reader["foto"] != DBNull.Value)
+                            {
+                                aluno.Foto = (byte[])reader.GetValue(3);
+                            }
+
+                            alunos.Add(aluno);
+                        }
+                    }
+                }
+            }
+
+            return alunos;
+        }
     }
 }

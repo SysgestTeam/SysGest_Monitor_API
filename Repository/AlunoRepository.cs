@@ -94,7 +94,6 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-
         public IEnumerable<Classes> GetClasses()
         {
             List<Classes> classes = new List<Classes>();
@@ -128,7 +127,6 @@ namespace SistemasdeTarefas.Repository
 
             return classes;
         }
-
         public IEnumerable<Turmas> GetTurmas(int classe)
         {
             List<Turmas> turmas = new List<Turmas>();
