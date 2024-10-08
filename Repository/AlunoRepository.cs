@@ -94,6 +94,45 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
+
+        public IEnumerable<Existencia_Card> GetAlunosSemFotos()
+        {
+            List<Existencia_Card> alunos = new List<Existencia_Card>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                string sqlQuery = "EXEC sp_ListarAlunosSemFotos";
+
+                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Existencia_Card aluno = new Existencia_Card
+                            {
+                                // Mapeie as colunas do resultado para o objeto TabAluno
+                                Nome = reader.GetString(3),
+                                NomeTurma = reader.GetString(4),
+                                NumAluno = reader.GetInt32(2),
+                                Foto = reader.IsDBNull(0) ? null : (byte[])reader.GetValue(0) // Verifica se a coluna é DBNull
+                            };
+                            if (reader["foto"] != DBNull.Value)
+                            {
+                                aluno.Foto = (byte[])reader.GetValue(0);
+                            }
+
+                            alunos.Add(aluno);
+                        }
+                    }
+                }
+            }
+
+            return alunos;
+        }
+
         public IEnumerable<Classes> GetClasses()
         {
             List<Classes> classes = new List<Classes>();
