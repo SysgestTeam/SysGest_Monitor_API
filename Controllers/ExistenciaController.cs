@@ -30,6 +30,20 @@ namespace SistemasdeTarefas.Controllers
             return Ok(existenciaCards);
         }
 
+        [HttpGet("Com-cartao-bloqueado-filtro")]
+        public ActionResult<IEnumerable<Existencia_Card>> GetExistenciaCardBloqueadoFiltro(int? idclasse = null, int? idturma = null)
+        {
+            var existenciaCards = _existenciaCardRepository.GetInexistenciaCardBloqueadoFiltro(idclasse, idturma);
+            return Ok(existenciaCards);
+        }
+
+        [HttpGet("Com-cartao-sem-acompanhente-filtro")]
+        public ActionResult<IEnumerable<Existencia_Card>> GetExistenciaCardSemAcompanhanteFiltro(int? idclasse = null, int? idturma = null)
+        {
+            var existenciaCards = _existenciaCardRepository.GetInexistenciaCardSemAcompanhateFiltro(idclasse, idturma);
+            return Ok(existenciaCards);
+        }
+
         [HttpGet("Com-cartao-SemAcompanhante")]
         public ActionResult<IEnumerable<Existencia_Card>> GetExistenciaCard_SemAcompanhante()
         {
