@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
-using System.Collections.Generic;
 
 namespace SistemasdeTarefas.Controllers
 {

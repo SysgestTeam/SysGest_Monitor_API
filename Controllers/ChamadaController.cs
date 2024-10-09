@@ -2,7 +2,6 @@
 using Microsoft.Data.SqlClient;
 using SistemasdeTarefas.Models;
 using System.Data;
-using SistemasdeTarefas.Models;
 
 namespace SistemasdeTarefas.Controllers
 {
