@@ -57,7 +57,7 @@ namespace SistemasdeTarefas.Controllers
             var inexistenciaCards = _existenciaCardRepository.GetInexistenciaCard();
             return Ok(inexistenciaCards);
         }
-        [HttpGet("Cartão- Bloqueado")]
+        [HttpGet("Cartão-Bloqueado")]
         public ActionResult<IEnumerable<Existencia_Card>> GetBloqueados()
         {
             var inexistenciaCards = _existenciaCardRepository.GetBloqueados();

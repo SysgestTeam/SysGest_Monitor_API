@@ -29,6 +29,12 @@ public class AlunoController : ControllerBase
         return alunos;
     }
 
+    [HttpGet("GetAluno-Sem-fotos-filtro")]
+    public IEnumerable<Existencia_Card> GetSemFotosFiltro(int? idclasse = null, int? idturma = null)
+    {
+        var alunos = _alunoRepository.GetAlunosSemFotosFiltro(idclasse,idturma);
+        return alunos;
+    }
     [HttpGet("GetAluno-filtro")]
     public IEnumerable<TabAluno> GetFiltro(int? idclasse = null, int? idturma = null)
     {
