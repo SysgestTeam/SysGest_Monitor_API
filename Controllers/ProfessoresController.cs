@@ -22,4 +22,18 @@ public class ProfessoresController : ControllerBase
         return alunos;
     }
 
+
+    [HttpGet("sem-fotos")]
+    public IEnumerable<Funcionario> getFuncionarioSemFotos()
+    {
+        var alunos = _professor.GetProfessoresSemFoto();
+        return alunos;
+    }
+    [HttpGet("com-fotos")]
+    public IEnumerable<Funcionario> getFuncionarioComFotos()
+    {
+        var alunos = _professor.GetProfessoresComFotos();
+        return alunos;
+    }
+
 }
