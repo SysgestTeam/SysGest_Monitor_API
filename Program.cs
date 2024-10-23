@@ -24,6 +24,8 @@ namespace SistemasdeTarefas
             builder.Services.AddScoped<IExistenciaCardRepository, ExistenciaCardRepository>();
             builder.Services.AddScoped<ICartaoRepository, CartaoRepository>();
             builder.Services.AddScoped<IRelatorioRepository, RelatorioRepository>();
+            builder.Services.AddScoped<IFuncionarioRepository, FuncionarioRepository>();
+            builder.Services.AddScoped<IProfessoresRepository, ProfessoresRepository>();
 
             // Configure o Swagger/OpenAPI
             builder.Services.AddSwaggerGen(c =>
