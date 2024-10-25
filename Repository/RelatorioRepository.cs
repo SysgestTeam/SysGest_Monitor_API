@@ -1,4 +1,5 @@
-﻿using System.Data.SqlClient;
+﻿using System.Data;
+using System.Data.SqlClient;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
 
@@ -59,14 +60,16 @@ namespace SistemasdeTarefas.Repository
             {
                 using (SqlConnection connection = new SqlConnection(_connectionString))
                 {
-                    connection.Open();
+                        connection.Open();
+                        // Chame o procedimento armazenado
 
-                    string sqlQuery = "EXEC sp_relatorio @dataInicial, @dataFinal";
+                        using (SqlCommand cmd = new SqlCommand("sp_relatorio", connection))
+                        {
 
-                    using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
-                    {
-                        cmd.Parameters.AddWithValue("@dataInicial", dataInicial);
-                        cmd.Parameters.AddWithValue("@dataFinal", dataFinal);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add(new SqlParameter("@dataInicial", dataInicial));
+                        cmd.Parameters.Add(new SqlParameter("@dataFinal", dataFinal));
+
 
                         using (SqlDataReader reader = cmd.ExecuteReader())
                         {
@@ -74,7 +77,7 @@ namespace SistemasdeTarefas.Repository
                             {
                                 Relatorio relatorio = new Relatorio
                                 {
-                                    IDCartao =  reader.GetString(reader.GetOrdinal("IDCartao")),
+                                    IDCartao =  reader.GetInt32(reader.GetOrdinal("IDCartao")),
                                     Nome = reader.GetString(reader.GetOrdinal("Nome")),
                                     Turma = reader.GetString(reader.GetOrdinal("Turma")),
                                     Data = reader.GetString(reader.GetOrdinal("Data")),

@@ -2,7 +2,7 @@ namespace SistemasdeTarefas.Models
 {
         public class Relatorio
         {
-            public string IDCartao { get; set; }
+            public int IDCartao { get; set; }
             public string Nome { get; set; }
             public string Turma { get; set; }
             public string Data { get; set; }

@@ -37,4 +37,18 @@ public class FuncionarioController : ControllerBase
         return alunos;
     }
 
+    [HttpGet("com-cartao")]
+    public IEnumerable<Funcionario> getFuncionarioComCartao()
+    {
+        var alunos = _funcionario.GetComCartao();
+        return alunos;
+    }
+
+    [HttpGet("sem-cartao")]
+    public IEnumerable<Funcionario> getFuncionarioSemCartao()
+    {
+        var alunos = _funcionario.GetSemCartao();
+        return alunos;
+    }
+
 }

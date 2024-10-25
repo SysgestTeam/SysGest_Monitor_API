@@ -54,7 +54,48 @@ namespace SistemasdeTarefas.Repository
 
         public IEnumerable<Funcionario> GetComCartao()
         {
-            throw new NotImplementedException();
+            List<Funcionario> funcionarios = new List<Funcionario>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Consulta SQL para buscar as classes
+                string sqlQuery = @"SELECT 
+                                Funcionario.NumInterno,
+                                Funcionario.NomeFuncionario, 
+                                Funcionario.Profissao, 
+                                Funcionario.Foto 
+                            FROM Funcionario
+                            LEFT JOIN CartaoFuncionario
+                                    ON CartaoFuncionario.NumInterno = Funcionario.NumInterno
+                            WHERE CartaoFuncionario.NumInterno IS NOT NULL AND Funcionario.Inactivo = 0";
+
+                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Funcionario funcionario = new Funcionario
+                            {
+                                Numero = reader.GetInt32(0),
+                                Nome = reader.GetString(1),
+                                Profissao = reader.GetString(2),
+                                foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) // Verifica se a coluna é DBNull
+                            };
+                            if (reader["foto"] != DBNull.Value)
+                            {
+                                funcionario.foto = (byte[])reader.GetValue(3);
+                            }
+
+                            funcionarios.Add(funcionario);
+                        }
+                    }
+                }
+            }
+
+            return funcionarios;
         }
 
         public IEnumerable<Funcionario> GetFuncionarioComFotos()
@@ -135,7 +176,48 @@ namespace SistemasdeTarefas.Repository
 
         public IEnumerable<Funcionario> GetSemCartao()
         {
-            throw new NotImplementedException();
+            List<Funcionario> funcionarios = new List<Funcionario>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Consulta SQL para buscar as classes
+                    string sqlQuery = @"SELECT 
+                                Funcionario.NumInterno,
+                                Funcionario.NomeFuncionario, 
+                                Funcionario.Profissao, 
+                                Funcionario.Foto 
+                            FROM Funcionario
+                            LEFT JOIN CartaoFuncionario
+                                    ON CartaoFuncionario.NumInterno = Funcionario.NumInterno
+                            WHERE CartaoFuncionario.NumInterno IS NULL AND Funcionario.Inactivo = 0";
+
+                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Funcionario funcionario = new Funcionario
+                            {
+                                Numero = reader.GetInt32(0),
+                                Nome = reader.GetString(1),
+                                Profissao = reader.GetString(2),
+                                foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) // Verifica se a coluna é DBNull
+                            };
+                            if (reader["foto"] != DBNull.Value)
+                            {
+                                funcionario.foto = (byte[])reader.GetValue(3);
+                            }
+
+                            funcionarios.Add(funcionario);
+                        }
+                    }
+                }
+            }
+
+            return funcionarios;
         }
     }
 }

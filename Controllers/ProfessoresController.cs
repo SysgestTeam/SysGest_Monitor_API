@@ -36,4 +36,18 @@ public class ProfessoresController : ControllerBase
         return alunos;
     }
 
+
+    [HttpGet("com-cartao")]
+    public IEnumerable<Funcionario> getProfessoresComCartao()
+    {
+        var alunos = _professor.GetComCartao();
+        return alunos;
+    }
+
+    [HttpGet("sem-cartao")]
+    public IEnumerable<Funcionario> getProfessorSemCartao()
+    {
+        var alunos = _professor.GetSemCartao();
+        return alunos;
+    }
 }
