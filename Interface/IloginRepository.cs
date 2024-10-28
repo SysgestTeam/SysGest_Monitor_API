@@ -2,7 +2,9 @@
 {
     public interface IloginRepository
     {
-        IEnumerable<string> login(string user, string senha);
+        public string login(string user, string senha);
+
+        public string GenerateJwtToken(string username);
 
     }
 }
