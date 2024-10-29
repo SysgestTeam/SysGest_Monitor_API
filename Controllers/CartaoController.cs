@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
 
@@ -16,6 +17,7 @@ namespace SistemasdeTarefas.Controllers
         }
 
         [HttpGet("encarregados")]
+        [Authorize]
         public ActionResult<IEnumerable<Cartao>> GetEncarregados(string codigo)
         {
             var encarregados = _cartaoRepository.GetEncarregados(codigo);
@@ -23,6 +25,7 @@ namespace SistemasdeTarefas.Controllers
         }
 
         [HttpGet("estudantes")]
+        [Authorize]
         public ActionResult<IEnumerable<Cartao>> GetEstudantes(string codigo)
         {
             var estudantes = _cartaoRepository.GetEstudantes(codigo);

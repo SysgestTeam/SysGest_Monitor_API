@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
@@ -16,6 +17,7 @@ public class FuncionarioController : ControllerBase
     }
 
     [HttpGet("GetFuncionario")]
+    [Authorize]
     public IEnumerable<Funcionario> Get()
     {
         var alunos = _funcionario.GetAll();
@@ -23,6 +25,7 @@ public class FuncionarioController : ControllerBase
     }
 
     [HttpGet("sem-fotos")]
+    [Authorize]
     public IEnumerable<Funcionario> getFuncionarioSemFotos()
     {
         var alunos = _funcionario.GetFuncionarioSemFoto();
@@ -31,6 +34,7 @@ public class FuncionarioController : ControllerBase
 
 
     [HttpGet("com-fotos")]
+    [Authorize]
     public IEnumerable<Funcionario> getFuncionarioComFotos()
     {
         var alunos = _funcionario.GetFuncionarioComFotos();
@@ -38,6 +42,7 @@ public class FuncionarioController : ControllerBase
     }
 
     [HttpGet("com-cartao")]
+    [Authorize]
     public IEnumerable<Funcionario> getFuncionarioComCartao()
     {
         var alunos = _funcionario.GetComCartao();
@@ -45,6 +50,7 @@ public class FuncionarioController : ControllerBase
     }
 
     [HttpGet("sem-cartao")]
+    [Authorize]
     public IEnumerable<Funcionario> getFuncionarioSemCartao()
     {
         var alunos = _funcionario.GetSemCartao();

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using SistemasdeTarefas.Models;
 using System.Data;
@@ -17,6 +18,7 @@ namespace SistemasdeTarefas.Controllers
         }
 
         [HttpGet("ChamadaByTurmas")]
+        [Authorize]
         public ActionResult<IEnumerable<Chamada>> GetByTurmas(string Turmas)
         {
             try
@@ -87,6 +89,7 @@ namespace SistemasdeTarefas.Controllers
         }
 
         [HttpGet("GetByTurmasAll")]
+        [Authorize]
         public ActionResult<IEnumerable<Chamada>> GetByTurmasAll()
         {
             try
@@ -135,6 +138,7 @@ namespace SistemasdeTarefas.Controllers
             }
         }
         [HttpGet("GetByTurmasParametros")]
+        [Authorize]
         public ActionResult<IEnumerable<Chamada>> GetByTurmasParametros(string Turmas)
         {
             try

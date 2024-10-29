@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
@@ -16,6 +17,7 @@ public class RelatorioController : ControllerBase
     }
 
     [HttpGet(Name = "GetRelatorioIntervalo")]
+    [Authorize]
     public IEnumerable<Relatorio> Get(string dataInicial, string dataFinal)
     {
         var resultado = _relatorio.GetRelatorioPorIntervalo(dataInicial, dataFinal);

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
 
@@ -16,6 +17,7 @@ namespace SistemasdeTarefas.Controllers
         }
 
         [HttpGet("Com-cartao")]
+        [Authorize]
         public ActionResult<IEnumerable<Existencia_Card>> GetExistenciaCard()
         {
             var existenciaCards = _existenciaCardRepository.GetExistenciaCard();
@@ -24,6 +26,7 @@ namespace SistemasdeTarefas.Controllers
 
 
         [HttpGet("Com-cartao-filtro")]
+        [Authorize]
         public ActionResult<IEnumerable<Existencia_Card>> GetExistenciaCardFiltro(int? idclasse = null, int? idturma = null)
         {
             var existenciaCards = _existenciaCardRepository.GetInexistenciaCardFiltro(idclasse, idturma);
@@ -31,6 +34,7 @@ namespace SistemasdeTarefas.Controllers
         }
 
         [HttpGet("Com-cartao-bloqueado-filtro")]
+        [Authorize]
         public ActionResult<IEnumerable<Existencia_Card>> GetExistenciaCardBloqueadoFiltro(int? idclasse = null, int? idturma = null)
         {
             var existenciaCards = _existenciaCardRepository.GetInexistenciaCardBloqueadoFiltro(idclasse, idturma);
@@ -38,6 +42,7 @@ namespace SistemasdeTarefas.Controllers
         }
 
         [HttpGet("Com-cartao-sem-acompanhente-filtro")]
+        [Authorize]
         public ActionResult<IEnumerable<Existencia_Card>> GetExistenciaCardSemAcompanhanteFiltro(int? idclasse = null, int? idturma = null)
         {
             var existenciaCards = _existenciaCardRepository.GetInexistenciaCardSemAcompanhateFiltro(idclasse, idturma);
@@ -45,6 +50,7 @@ namespace SistemasdeTarefas.Controllers
         }
 
         [HttpGet("Com-cartao-SemAcompanhante")]
+        [Authorize]
         public ActionResult<IEnumerable<Existencia_Card>> GetExistenciaCard_SemAcompanhante()
         {
             var existenciaCards = _existenciaCardRepository.GetExistenciaCard_SemAcompanhante();
@@ -52,12 +58,14 @@ namespace SistemasdeTarefas.Controllers
         }
 
         [HttpGet("sem-cartao")]
+        [Authorize]
         public ActionResult<IEnumerable<Existencia_Card>> GetInexistenciaCard()
         {
             var inexistenciaCards = _existenciaCardRepository.GetInexistenciaCard();
             return Ok(inexistenciaCards);
         }
         [HttpGet("Cartão-Bloqueado")]
+        [Authorize]
         public ActionResult<IEnumerable<Existencia_Card>> GetBloqueados()
         {
             var inexistenciaCards = _existenciaCardRepository.GetBloqueados();

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
@@ -16,6 +17,7 @@ public class AlunoController : ControllerBase
     }
 
     [HttpGet("GetAluno")]
+    [Authorize]
     public IEnumerable<TabAluno> Get()
     {
         var alunos = _alunoRepository.GetAlunos();
@@ -23,6 +25,7 @@ public class AlunoController : ControllerBase
     }
 
     [HttpGet("GetAluno-Sem-fotos")]
+    [Authorize]
     public IEnumerable<Existencia_Card> GetSemFotos()
     {
         var alunos = _alunoRepository.GetAlunosSemFotos();
@@ -30,12 +33,15 @@ public class AlunoController : ControllerBase
     }
 
     [HttpGet("GetAluno-Sem-fotos-filtro")]
+    [Authorize]
     public IEnumerable<Existencia_Card> GetSemFotosFiltro(int? idclasse = null, int? idturma = null)
     {
         var alunos = _alunoRepository.GetAlunosSemFotosFiltro(idclasse,idturma);
         return alunos;
     }
+
     [HttpGet("GetAluno-filtro")]
+    [Authorize]
     public IEnumerable<TabAluno> GetFiltro(int? idclasse = null, int? idturma = null)
     {
         var alunos = _alunoRepository.GetAlunosFiltro(idclasse,idturma);
@@ -43,6 +49,7 @@ public class AlunoController : ControllerBase
     }
 
     [HttpGet("listar-as-classes")]
+    [Authorize]
     public IEnumerable<Classes> GetClasses()
     {
         var classe = _alunoRepository.GetClasses();
@@ -50,6 +57,7 @@ public class AlunoController : ControllerBase
     }
 
     [HttpGet("listar-as-turmas/{classe}")]
+    [Authorize]
     public IEnumerable<Turmas> GetTurmas(int classe)
     {
         var turmas = _alunoRepository.GetTurmas(classe);

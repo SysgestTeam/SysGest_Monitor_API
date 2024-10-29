@@ -1,17 +1,14 @@
-using FluentAssertions.Common;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Repository;
 using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace SistemasdeTarefas
 {
     public class Program
     {
-
-        
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -28,49 +25,57 @@ namespace SistemasdeTarefas
             builder.Services.AddScoped<IProfessoresRepository, ProfessoresRepository>();
             builder.Services.AddScoped<IloginRepository, loginRepository>();
 
-            // Configure o Swagger/OpenAPI
+            // Configuração de autenticação JWT
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = "yourdomain.com",
+                    ValidAudience = "yourdomain.com",
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("ChaveSuperSecreta12345678901234567890"))
+                };
+            });
+
+            // Configuração do Swagger
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "API MONITOR", Version = "v1" });
             });
 
-
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "API MONITOR");
-                    c.RoutePrefix = "swagger";
-                });
-            }
-
+            // Middlewares
             app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseAuthorization();
 
-            // Configura��o do CORS
-            app.UseCors(builder =>
+            // Configuração do Swagger no pipeline de requisições
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
             {
-                builder.AllowAnyOrigin(); // Permitir qualquer origem (n�o recomendado em produ��o)
-                builder.AllowAnyMethod(); // Permitir qualquer m�todo HTTP
-                builder.AllowAnyHeader(); // Permitir qualquer cabe�alho
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "API MONITOR");
+                c.RoutePrefix = "swagger";
+            });
+
+            // Configuração do CORS
+            app.UseCors(corsBuilder =>
+            {
+                corsBuilder.AllowAnyOrigin();
+                corsBuilder.AllowAnyMethod();
+                corsBuilder.AllowAnyHeader();
             });
 
             app.MapControllers();
-
             app.Run();
-        }
-
-        // M�todo Configure
-        public static void Configure(IApplicationBuilder app)
-        {
-            app.UseRouting();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
         }
     }
 }
