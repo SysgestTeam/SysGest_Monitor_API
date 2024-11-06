@@ -22,10 +22,7 @@ namespace SistemasdeTarefas.Repository
             {
                 connection.Open();
 
-                // Chame o procedimento armazenado
-                string sqlQuery = "EXEC sp_SaidaEntrada";
-
-                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                using (SqlCommand cmd = new SqlCommand("sp_SaidaEntrada", connection))
                 {
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -33,15 +30,15 @@ namespace SistemasdeTarefas.Repository
                         {
                             TabAluno aluno = new TabAluno
                             {
-                                // Mapeie as colunas do resultado para o objeto TabAluno
-                                Nome = reader.GetString(0),
-                                Hora = reader.GetString(1),
-                                Descricao = reader.GetString(2),
-                                
+                                // Verifica se cada coluna pode ser nula antes de acessá-la
+                                Nome = reader.IsDBNull(0) ? null : reader.GetString(0),
+                                Hora = reader.IsDBNull(1) ? null : reader.GetString(1),
+                                Turma = reader.IsDBNull(3) ? null : reader.GetString(3),
                             };
+
                             if (reader["foto"] != DBNull.Value)
                             {
-                                aluno.foto = (byte[])reader.GetValue(3);
+                                aluno.foto = (byte[])reader["foto"];
                             }
 
                             alunos.Add(aluno);
@@ -52,6 +49,7 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
+
 
         public IEnumerable<TabAluno> GetAlunosFiltro(int? idclasse = null, int? idturma = null)
         {

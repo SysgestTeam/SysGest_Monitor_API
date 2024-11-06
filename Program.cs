@@ -46,25 +46,55 @@ namespace SistemasdeTarefas
             });
 
             // Configuração do Swagger
+
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "API MONITOR", Version = "v1" });
+
+                // Configuração de autenticação via JWT Bearer
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Insira o token JWT no formato: Bearer {seu token}"
+                });
+
+                // Adiciona o parâmetro de cabeçalho de autorização globalmente
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
             });
+
 
             var app = builder.Build();
 
-            // Middlewares
-            app.UseHttpsRedirection();
-            app.UseAuthentication();
-            app.UseAuthorization();
+                // Middlewares
+                app.UseHttpsRedirection();
+                app.UseAuthentication();
+                app.UseAuthorization();
 
-            // Configuração do Swagger no pipeline de requisições
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "API MONITOR");
-                c.RoutePrefix = "swagger";
-            });
+                // Configuração do Swagger no pipeline de requisições
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "API MONITOR");
+                    c.RoutePrefix = "swagger";
+                });
+
 
             // Configuração do CORS
             app.UseCors(corsBuilder =>

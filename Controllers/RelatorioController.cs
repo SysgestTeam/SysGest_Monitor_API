@@ -18,7 +18,7 @@ public class RelatorioController : ControllerBase
 
     [HttpGet(Name = "GetRelatorioIntervalo")]
     [Authorize]
-    public IEnumerable<Relatorio> Get(string dataInicial, string dataFinal)
+    public IEnumerable<Relatorio> Get(DateTime dataInicial, DateTime dataFinal)
     {
         var resultado = _relatorio.GetRelatorioPorIntervalo(dataInicial, dataFinal);
         return resultado;

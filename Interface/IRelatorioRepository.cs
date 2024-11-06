@@ -4,8 +4,6 @@ namespace SistemasdeTarefas.Interface
 {
     public interface IRelatorioRepository
     {
-       // IEnumerable<Relatorio> GetEntradasSaidasPorMes(int mes);
-       // IEnumerable<Relatorio> GetEntradasSaidasPorAno(int ano);
-        IEnumerable<Relatorio> GetRelatorioPorIntervalo(String dataInicial, String dataFinal);
+        IEnumerable<Relatorio> GetRelatorioPorIntervalo(DateTime dataInicial, DateTime dataFinal);
     }
 }

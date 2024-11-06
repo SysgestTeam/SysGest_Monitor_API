@@ -13,47 +13,7 @@ namespace SistemasdeTarefas.Repository
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
-
-        public IEnumerable<TabAluno> GetAlunos()
-        {
-            List<TabAluno> alunos = new List<TabAluno>();
-
-            using (SqlConnection connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-
-                // Chame o procedimento armazenado
-                string sqlQuery = "EXEC sp_SaidaEntrada";
-
-                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
-                {
-                    using (SqlDataReader reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            TabAluno aluno = new TabAluno
-                            {
-                                // Mapeie as colunas do resultado para o objeto TabAluno
-                                Nome = reader.GetString(0),
-                                Hora = reader.GetString(1),
-                                Descricao = reader.GetString(2),
-
-                            };
-                            if (reader["foto"] != DBNull.Value)
-                            {
-                                aluno.foto = (byte[])reader.GetValue(3);
-                            }
-
-                            alunos.Add(aluno);
-                        }
-                    }
-                }
-            }
-
-            return alunos;
-        }
-
-        public IEnumerable<Relatorio> GetRelatorioPorIntervalo(string dataInicial, string dataFinal)
+        public IEnumerable<Relatorio> GetRelatorioPorIntervalo(DateTime dataInicial, DateTime dataFinal)
         {
             List<Relatorio> relatorios = new List<Relatorio>();
             try

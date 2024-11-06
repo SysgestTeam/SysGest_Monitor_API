@@ -17,7 +17,6 @@ public class AlunoController : ControllerBase
     }
 
     [HttpGet("GetAluno")]
-    [Authorize]
     public IEnumerable<TabAluno> Get()
     {
         var alunos = _alunoRepository.GetAlunos();
