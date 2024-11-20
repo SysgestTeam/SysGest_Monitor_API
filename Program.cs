@@ -45,8 +45,18 @@ namespace SistemasdeTarefas
                 };
             });
 
-            // Configuração do Swagger
+            // Configuração do CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
 
+            // Configuração do Swagger
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "API MONITOR", Version = "v1" });
@@ -64,45 +74,38 @@ namespace SistemasdeTarefas
 
                 // Adiciona o parâmetro de cabeçalho de autorização globalmente
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
             });
-
 
             var app = builder.Build();
 
-                // Middlewares
-                app.UseHttpsRedirection();
-                app.UseAuthentication();
-                app.UseAuthorization();
+            // Middlewares
+            app.UseHttpsRedirection();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
-                // Configuração do Swagger no pipeline de requisições
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "API MONITOR");
-                    c.RoutePrefix = "swagger";
-                });
-
-
-            // Configuração do CORS
-            app.UseCors(corsBuilder =>
+            // Configuração do Swagger no pipeline de requisições
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
             {
-                corsBuilder.AllowAnyOrigin();
-                corsBuilder.AllowAnyMethod();
-                corsBuilder.AllowAnyHeader();
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "API MONITOR");
+                c.RoutePrefix = "swagger";
             });
+
+            // Aplicação do CORS
+            app.UseCors("AllowAll");
 
             app.MapControllers();
             app.Run();
