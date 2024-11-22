@@ -51,8 +51,18 @@ namespace SistemasdeTarefas
                 options.AddPolicy("AllowAll", policy =>
                 {
                     policy.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader();
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigin", policy =>
+                {
+                    policy.WithOrigins("http://10.254.30.20:93") // Origem permitida
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
                 });
             });
 
@@ -90,6 +100,8 @@ namespace SistemasdeTarefas
             });
 
             var app = builder.Build();
+            app.UseCors("AllowSpecificOrigin");
+
 
             // Middlewares
             app.UseHttpsRedirection();

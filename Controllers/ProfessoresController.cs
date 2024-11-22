@@ -17,7 +17,6 @@ public class ProfessoresController : ControllerBase
     }
 
     [HttpGet("GetProfessores")]
-    [Authorize]
     public IEnumerable<Funcionario> Get()
     {
         var alunos = _professor.GetAll();
@@ -26,14 +25,12 @@ public class ProfessoresController : ControllerBase
 
 
     [HttpGet("sem-fotos")]
-    [Authorize]
     public IEnumerable<Funcionario> getFuncionarioSemFotos()
     {
         var alunos = _professor.GetProfessoresSemFoto();
         return alunos;
     }
     [HttpGet("com-fotos")]
-    [Authorize]
     public IEnumerable<Funcionario> getFuncionarioComFotos()
     {
         var alunos = _professor.GetProfessoresComFotos();
@@ -42,7 +39,6 @@ public class ProfessoresController : ControllerBase
 
 
     [HttpGet("com-cartao")]
-    [Authorize]
     public IEnumerable<Funcionario> getProfessoresComCartao()
     {
         var alunos = _professor.GetComCartao();
@@ -50,7 +46,6 @@ public class ProfessoresController : ControllerBase
     }
 
     [HttpGet("sem-cartao")]
-    [Authorize]
     public IEnumerable<Funcionario> getProfessorSemCartao()
     {
         var alunos = _professor.GetSemCartao();
