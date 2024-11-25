@@ -60,7 +60,7 @@ namespace SistemasdeTarefas
             {
                 options.AddPolicy("AllowSpecificOrigin", policy =>
                 {
-                    policy.WithOrigins("http://10.254.30.20:93") // Origem permitida
+                    policy.WithOrigins("http://192.168.10.20:8080") // Origem permitida
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });

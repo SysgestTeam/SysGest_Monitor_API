@@ -30,10 +30,10 @@ namespace SistemasdeTarefas.Repository
                         {
                             TabAluno aluno = new TabAluno
                             {
-                                // Verifica se cada coluna pode ser nula antes de acessá-la
-                                Nome = reader.IsDBNull(0) ? null : reader.GetString(0),
-                                Hora = reader.IsDBNull(1) ? null : reader.GetString(1),
-                                Turma = reader.IsDBNull(3) ? null : reader.GetString(3),
+                                Nome = reader.GetString(0),
+                                Hora = reader.GetString(1),
+                                Descricao = reader.GetString(2),
+                                foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3)
                             };
 
                             if (reader["foto"] != DBNull.Value)
