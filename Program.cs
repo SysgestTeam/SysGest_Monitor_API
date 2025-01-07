@@ -24,6 +24,7 @@ namespace SistemasdeTarefas
             builder.Services.AddScoped<IFuncionarioRepository, FuncionarioRepository>();
             builder.Services.AddScoped<IProfessoresRepository, ProfessoresRepository>();
             builder.Services.AddScoped<IloginRepository, loginRepository>();
+            builder.Services.AddScoped<ISaldoConsumo, SaldoConsumoRepository>();
 
             // Configuração de autenticação JWT
             builder.Services.AddAuthentication(options =>
@@ -60,7 +61,7 @@ namespace SistemasdeTarefas
             {
                 options.AddPolicy("AllowSpecificOrigin", policy =>
                 {
-                    policy.WithOrigins("http://192.168.10.20:8080") // Origem permitida
+                    policy.WithOrigins("http://127.0.0.1:5500") // Origem permitida
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
@@ -120,7 +121,7 @@ namespace SistemasdeTarefas
             app.UseCors("AllowAll");
 
             app.MapControllers();
-            app.Run();
+             app.Run();
         }
     }
 }

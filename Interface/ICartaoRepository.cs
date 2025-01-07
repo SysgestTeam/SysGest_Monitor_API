@@ -6,5 +6,6 @@ namespace SistemasdeTarefas.Interface
     {
         IEnumerable<Cartao> GetEncarregados(string codigo);
         IEnumerable<Cartao> GetEstudantes(string codigo);
+        IEnumerable<Cartao> GetEstudantesPeloNome(string nome);
     }
 }

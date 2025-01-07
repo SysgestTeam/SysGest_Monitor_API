@@ -29,5 +29,12 @@ namespace SistemasdeTarefas.Controllers
             var estudantes = _cartaoRepository.GetEstudantes(codigo);
             return Ok(estudantes);
         }
+
+        [HttpGet("estudantes-pelo-nome")]
+        public ActionResult<IEnumerable<Cartao>> GetEstudantesPeloNome(string nome)
+        {
+            var estudantes = _cartaoRepository.GetEstudantesPeloNome(nome);
+            return Ok(estudantes);
+        }
     }
 }

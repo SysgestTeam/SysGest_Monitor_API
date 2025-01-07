@@ -4,7 +4,7 @@
     {
         public string login(string user, string senha);
 
-        public string GenerateJwtToken(string username);
+        public string GenerateJwtToken(string username); 
 
     }
 }

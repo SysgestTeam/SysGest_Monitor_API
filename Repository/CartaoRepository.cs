@@ -13,7 +13,7 @@ namespace SistemasdeTarefas.Repository
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
-
+ 
         public IEnumerable<Cartao> GetEncarregados( string codigo)
         {
             List<Cartao> encarregados = new List<Cartao>();
@@ -76,7 +76,48 @@ namespace SistemasdeTarefas.Repository
                                 Nome = reader.GetString(0),
                                 CodigoCartao = reader.GetString(1),
                                 NomeTurma = reader.GetString(2),
-                                Foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3)
+                                Foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3),
+                                NumAluno = reader.GetInt32(4),
+                                saldo = reader.GetDecimal(5)
+                            };
+
+                            estudantes.Add(cartao);
+                        }
+                    }
+                }
+            }
+
+            return estudantes;
+        }
+
+        public IEnumerable<Cartao> GetEstudantesPeloNome(string nome)
+        {
+            List<Cartao> estudantes = new List<Cartao>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                string storedProcedureName = "sp_CatracaPesquisaEstudanteCartaoPeloNome";
+
+                using (SqlCommand cmd = new SqlCommand(storedProcedureName, connection))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    // Adicionando parâmetros ao comando SQL
+                    cmd.Parameters.Add(new SqlParameter("@Nome", nome));
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Cartao cartao = new Cartao
+                            {
+                                Nome = reader.GetString(0),
+                                CodigoCartao = reader.GetString(1),
+                                NomeTurma = reader.GetString(2),
+                                Foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3),
+                                NumAluno = reader.GetInt32(4),
+                                saldo = reader.GetDecimal(5)
                             };
 
                             estudantes.Add(cartao);

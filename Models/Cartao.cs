@@ -6,5 +6,7 @@
         public string CodigoCartao { get; set; }
         public byte[] Foto { get; set; }
         public string NomeTurma { get; set; }
+        public int NumAluno { get; set; }
+        public decimal saldo { get; set; }
     }
 }

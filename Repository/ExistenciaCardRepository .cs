@@ -36,7 +36,9 @@ namespace SistemasdeTarefas.Repository
                                 NumAluno = reader.GetInt32(0), // Coluna do tipo int (substitua pelo tipo correto se necessário)
                                 Nome = reader.GetString(1),
                                 NomeTurma = reader.GetString(2),
-                                Foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) // Verifica se a coluna é DBNull
+                                Foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3),
+                                CodigoCartao = reader.GetString(4),// Verifica se a coluna é DBNull
+                                saldo = reader.GetDecimal(5),// Verifica se a coluna é DBNull
                             };
 
                             existenciaCards.Add(card);

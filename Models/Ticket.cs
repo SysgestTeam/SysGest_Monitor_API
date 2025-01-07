@@ -1,0 +1,11 @@
+﻿namespace SistemasdeTarefas.Models
+{
+    public class Ticket
+    {
+        public int Id { get; set; }
+        public int IdAluno { get; set; }
+        public string Nome { get; set; }
+        public DateTime Data { get; set; }
+        public int NumeroTicket { get; set; }
+    }
+}
