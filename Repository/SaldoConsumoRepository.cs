@@ -27,11 +27,11 @@ namespace SistemasdeTarefas.Repository
                     {
                         // Query SQL para lançar o consumo
                         string sqlQuery = @"
-                    DECLARE @IdAluno INT;
-                    SET @IdAluno = (SELECT IDALUNO FROM TABALUNOS WHERE NUMALUNO = @NumAluno);
-                    INSERT INTO SaldosConsumos (IDALUNO, UsedValue, Anulado, Deleted, DataRegisto, DataAlter, TimeRegist)
-                    VALUES (@IdAluno, @UsedValue, 0, 0, @DataRegisto, @DataAlter, @TimeRegist);
-                ";
+                        DECLARE @IdAluno INT;
+                        SET @IdAluno = (SELECT IDALUNO FROM TABALUNOS WHERE NUMALUNO = @NumAluno);
+                        INSERT INTO SaldosConsumos (IDALUNO, UsedValue, Anulado, Deleted, DataRegisto, DataAlter, TimeRegist)
+                        VALUES (@IdAluno, @UsedValue, 0, 0, @DataRegisto, @DataAlter, @TimeRegist);
+                    ";
 
                         using (SqlCommand cmd = new SqlCommand(sqlQuery, connection, transaction))
                         {
@@ -49,21 +49,36 @@ namespace SistemasdeTarefas.Repository
                         // Gerar o ticket
                         GerarTicket(numAluno);
 
-                        //Imprimir
-                        //PrintTicket(numAluno);
                         // Confirmar a transação
                         transaction.Commit();
                     }
-                    catch (Exception ex)
+                    catch (SqlException sqlEx)
                     {
                         // Reverter a transação em caso de erro
                         transaction.Rollback();
-                        // Lançar uma exceção com detalhes do erro
+
+                        // Log detalhado do erro da SP
+                        var errorMessage = "Erro ao realizar o lançamento de consumo ou gerar ticket. Detalhes do erro SQL: ";
+                        foreach (SqlError error in sqlEx.Errors)
+                        {
+                            errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
+                        }
+
+                        // Lançar uma exceção personalizada com os detalhes
+                        throw new ApplicationException(errorMessage, sqlEx);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Reverter a transação para erros genéricos
+                        transaction.Rollback();
+
+                        // Lançar uma exceção padrão
                         throw new ApplicationException("Erro ao realizar o lançamento de consumo ou gerar ticket.", ex);
                     }
                 }
             }
         }
+
 
 
         public void GerarTicket(int numAluno)
@@ -74,7 +89,6 @@ namespace SistemasdeTarefas.Repository
                 {
                     connection.Open();
 
-                   
                     using (SqlCommand cmd = new SqlCommand("sp_CriarTicket", connection))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
@@ -82,18 +96,33 @@ namespace SistemasdeTarefas.Repository
                         // Adicionar parâmetros
                         cmd.Parameters.Add(new SqlParameter("@NumAluno", SqlDbType.Int) { Value = numAluno });
 
-                        // Executar a query
-                        cmd.ExecuteNonQuery();
+                        try
+                        {
+                            // Executar a stored procedure
+                            cmd.ExecuteNonQuery();
+                        }
+                        catch (SqlException sqlEx)
+                        {
+                            // Captura e detalha os erros gerados pela stored procedure
+                            var errorMessage = "Erro ao executar a stored procedure 'sp_CriarTicket'. Detalhes do erro SQL:";
+                            foreach (SqlError error in sqlEx.Errors)
+                            {
+                                errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
+                            }
+
+                            // Lançar uma exceção personalizada com os detalhes
+                            throw new ApplicationException(errorMessage, sqlEx);
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
-                // Tratar exceções, se necessário (exemplo: logar o erro)
-                // Logger.LogError(ex, "Erro ao realizar o lançamento de consumo.");
-                throw new ApplicationException("Erro ao realizar o lançamento de consumo.", ex);
+                // Tratar exceções genéricas
+                throw new ApplicationException("Erro ao gerar o ticket.", ex);
             }
         }
+
 
         public IEnumerable<SaldoConsumo> GetHistóricoConsumo(int NumeroAluno)
         {
@@ -177,11 +206,12 @@ namespace SistemasdeTarefas.Repository
 
                 // Consulta SQL para buscar as classes
                 string sqlQuery = $@"
-                            declare @TOTALDEP AS NUMERIC(18,2), @TOTALCONSUMOS AS NUMERIC(18,2), @IDALUNO AS INT  
+                            declare @TOTALDEP AS NUMERIC(18,2), @TOTALCONSUMOS AS NUMERIC(18,2), @IDALUNO AS INT, @ValorArtigo  AS NUMERIC(18,2)   
                             SET @IDALUNO =  ( SELECT  IdALuno FROM  TABALUNOS WHERE NUMALUNO = {NumeroAluno} )
+                            SET @ValorArtigo = (SELECT PRCVENDA FROM TABARTIGOS  WHERE CODIGO = 9722)
                             SET @TOTALDEP = (select isnull((select sum(DepValue) from DepSaldos where idaluno = @IDALUNO and Anulado = 0 and Deleted = 0), 0)) 
                             SET @TOTALCONSUMOS = (select isnull((select sum(UsedValue) from SaldosConsumos where idaluno = @IDALUNO and Anulado = 0 and Deleted = 0), 0)) 
-                            select SALDO = @TOTALDEP - @TOTALCONSUMOS";
+                            select SALDO = @TOTALDEP - @TOTALCONSUMOS, ValorAlmoco = @ValorArtigo";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
                 {
@@ -191,7 +221,8 @@ namespace SistemasdeTarefas.Repository
                         {
                             SaldoConsumo saldoConsumo = new SaldoConsumo
                             {
-                                UsedValue = reader.GetDecimal(0)
+                                UsedValue = reader.GetDecimal(0),
+                                ValorAlmo = reader.GetDecimal(1)
                             };
 
                             SaldoConsumos.Add(saldoConsumo);
@@ -212,7 +243,10 @@ namespace SistemasdeTarefas.Repository
                 connection.Open();
 
                 // Consulta SQL para buscar as classes
-                        string sqlQuery = $@"SELECT TOP 1 * FROM TABTICKET
+                        string sqlQuery = $@"
+                        DECLARE  @ValorArtigo  AS NUMERIC(18,2)
+                        SET @ValorArtigo = (SELECT PRCVENDA FROM TABARTIGOS  WHERE CODIGO = 9722)
+                        SELECT TOP 1 *,ValorAlmoco = @ValorArtigo FROM TABTICKET
                         WHERE IdAluno =  (SELECT IDALUNO FROM TABALUNOS WHERE NUMALUNO = {numAluno})
                         ORDER BY Data DESC";
 
@@ -229,6 +263,7 @@ namespace SistemasdeTarefas.Repository
                                 Nome = reader.GetString(2),
                                 Data = reader.GetDateTime(3),
                                 NumeroTicket = reader.GetInt32(4),
+                                ValorAlmo = reader.GetDecimal(5)
 
                             };
 

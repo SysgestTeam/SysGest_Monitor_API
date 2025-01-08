@@ -50,11 +50,28 @@ public class SaldoConsumoController : ControllerBase
     }
 
 
-    [HttpGet("ticket")]
-    public IEnumerable<Ticket> ticket(int NumALuno)
+   [HttpGet("ticket")]
+public IActionResult Ticket(int NumAluno)
+{
+    try
     {
-        var alunos = _SaldoRepository.ListTicket(NumALuno);
+        // Obter a lista de tickets
+        var alunos = _SaldoRepository.ListTicket(NumAluno);
 
-        return alunos;
+        // Retornar os tickets no formato JSON
+        return Ok(alunos);
     }
+    catch (ApplicationException ex)
+    {
+        // Erro específico da aplicação, retornando com detalhes
+        return BadRequest(new { mensagem = ex.Message });
+    }
+    catch (Exception ex)
+    {
+        // Erro genérico, logando detalhes e retornando mensagem genérica
+        // Logger.LogError(ex, "Erro ao obter tickets para o aluno.");
+        return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+    }
+}
+
 }
