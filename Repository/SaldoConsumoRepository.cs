@@ -79,8 +79,6 @@ namespace SistemasdeTarefas.Repository
             }
         }
 
-
-
         public void GerarTicket(int numAluno)
         {
             try
@@ -134,7 +132,8 @@ namespace SistemasdeTarefas.Repository
 
                 // Consulta SQL para buscar as classes
                 string sqlQuery = $@"SELECT Id, IdAluno, UsedValue, DataRegisto,DataAlter FROM SaldosConsumos 
-                                    WHERE IdAluno = (SELECT IdAluno FROM TABALUNOS WHERE NUMALUNO = {NumeroAluno})";
+                                    WHERE IdAluno = (SELECT IdAluno FROM TABALUNOS WHERE NUMALUNO = {NumeroAluno})
+                                    ORDER BY DataRegisto DESC";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
                 {
