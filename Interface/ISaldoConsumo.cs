@@ -10,7 +10,9 @@ namespace SistemasdeTarefas.Interface
         public void Consumo(int numAluno, decimal UsedValue);
         public void GerarTicket(int numAluno);
         public IEnumerable<Ticket> ListTicket(int numAluno);
-
+        public IEnumerable<Ticket> List();
+        public IEnumerable<Dashboard> Dashboad();
+        public IEnumerable<CalculoParaEstatistica> CalculoParaEstatistica();
         public void PrintTicket(int numAluno);
 
     }

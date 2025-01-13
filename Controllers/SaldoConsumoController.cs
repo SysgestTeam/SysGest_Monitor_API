@@ -1,8 +1,6 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
-using SistemasdeTarefas.Repository;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -21,6 +19,16 @@ public class SaldoConsumoController : ControllerBase
     public IEnumerable<SaldoConsumo> Get(int NumALuno) {
         {
             var alunos = _SaldoRepository.GetSaldoConsumo(NumALuno);
+            return alunos;
+        }
+
+    }
+
+    [HttpGet("listar-todos-ticket")]
+    public IEnumerable<Ticket> Get()
+    {
+        {
+            var alunos = _SaldoRepository.List();
             return alunos;
         }
 
@@ -49,9 +57,25 @@ public class SaldoConsumoController : ControllerBase
         return alunos;
     }
 
+    [HttpGet("dashboard")]
+    public IEnumerable<Dashboard> dashboard()
+    {
+        var alunos = _SaldoRepository.Dashboad();
 
-   [HttpGet("ticket")]
-public IActionResult Ticket(int NumAluno)
+        return alunos;
+    }
+
+    [HttpGet("calculo")]
+    public IEnumerable<CalculoParaEstatistica> calculo()
+    {
+        var alunos = _SaldoRepository.CalculoParaEstatistica();
+
+        return alunos;
+    }
+
+
+    [HttpGet("ticket")]
+    public IActionResult Ticket(int NumAluno)
 {
     try
     {

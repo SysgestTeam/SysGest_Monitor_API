@@ -16,6 +16,38 @@ namespace SistemasdeTarefas.Repository
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
+        public IEnumerable<CalculoParaEstatistica> CalculoParaEstatistica()
+        {
+            List<CalculoParaEstatistica> dashboard = new List<CalculoParaEstatistica>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                string sqlQuery = "SP_ContagemAlunosComTicket"; // Chame o procedimento armazenado
+
+                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            CalculoParaEstatistica dados = new CalculoParaEstatistica
+                            {
+                                TotalMatriculados = reader.GetInt32(0), // Coluna do tipo int (substitua pelo tipo correto se necessário)
+                                AlunosComTicket = reader.GetInt32(1),
+                                AlunosSemTicket = reader.GetInt32(2)
+                            };
+
+                            dashboard.Add(dados);
+                        }
+                    }
+                }
+            }
+
+            return dashboard;
+        }
+
         public void Consumo(int numAluno, decimal usedValue)
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))
@@ -79,6 +111,38 @@ namespace SistemasdeTarefas.Repository
             }
         }
 
+        public IEnumerable<Dashboard> Dashboad()
+        {
+            List<Dashboard> dashboard = new List<Dashboard>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                string sqlQuery = "sp_ObterEstatisticasTicket"; // Chame o procedimento armazenado
+
+                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Dashboard dados = new Dashboard
+                            {
+                                TotalTicket = reader.GetInt32(0), // Coluna do tipo int (substitua pelo tipo correto se necessário)
+                                TotalAlunos = reader.GetInt32(1),
+                                AlunosSemSaldos = reader.GetInt32(2)
+                            };
+
+                            dashboard.Add(dados);
+                        }
+                    }
+                }
+            }
+
+            return dashboard;
+        }
+
         public void GerarTicket(int numAluno)
         {
             try
@@ -120,7 +184,6 @@ namespace SistemasdeTarefas.Repository
                 throw new ApplicationException("Erro ao gerar o ticket.", ex);
             }
         }
-
 
         public IEnumerable<SaldoConsumo> GetHistóricoConsumo(int NumeroAluno)
         {
@@ -222,6 +285,54 @@ namespace SistemasdeTarefas.Repository
                             {
                                 UsedValue = reader.GetDecimal(0),
                                 ValorAlmo = reader.GetDecimal(1)
+                            };
+
+                            SaldoConsumos.Add(saldoConsumo);
+                        }
+                    }
+                }
+            }
+
+            return SaldoConsumos;
+        }
+
+        public IEnumerable<Ticket> List()
+        {
+            List<Ticket> SaldoConsumos = new List<Ticket>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Consulta SQL para buscar as classes
+                string sqlQuery = $@"
+                        DECLARE @ValorArtigo AS NUMERIC(18,2);
+
+                        -- Obter o valor do artigo com código 9722
+                        SET @ValorArtigo = (SELECT PRCVENDA FROM TABARTIGOS WHERE CODIGO = 9722);
+
+                        -- Listar apenas os tickets do dia atual
+                        SELECT *, 
+                               ValorAlmoco = @ValorArtigo
+                        FROM TABTICKET
+                        WHERE CAST(Data AS DATE) = CAST(GETDATE() AS DATE)
+                        ORDER BY Data DESC;";
+
+                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Ticket saldoConsumo = new Ticket
+                            {
+                                Id = reader.GetInt32(0),
+                                IdAluno = reader.GetInt32(1),
+                                Nome = reader.GetString(2),
+                                Data = reader.GetDateTime(3),
+                                NumeroTicket = reader.GetInt32(4),
+                                ValorAlmo = reader.GetDecimal(5)
+
                             };
 
                             SaldoConsumos.Add(saldoConsumo);
