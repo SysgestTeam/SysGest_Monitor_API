@@ -1,5 +1,4 @@
-﻿using System.Data;
-using System.Data.SqlClient;
+﻿using System.Data.SqlClient;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
 
@@ -33,9 +32,9 @@ namespace SistemasdeTarefas.Repository
                         {
                             Funcionario funcionario = new Funcionario
                             {
-                                Numero = reader.GetInt32(0),
-                                Nome = reader.GetString(1),
-                                Profissao = reader.GetString(2),
+                                Numero = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                                Nome = reader.IsDBNull(1) ? null : reader.GetString(1),
+                                Profissao = reader.IsDBNull(2) ? null : reader.GetString(2),
                                 foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) // Verifica se a coluna é DBNull
                             };
                             if (reader["foto"] != DBNull.Value)
@@ -155,9 +154,9 @@ namespace SistemasdeTarefas.Repository
                         {
                             Funcionario funcionario = new Funcionario
                             {
-                                Numero = reader.GetInt32(0),
-                                Nome = reader.GetString(1),
-                                Profissao = reader.GetString(2),
+                                Numero = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                                Nome = reader.IsDBNull(1) ? null : reader.GetString(1),
+                                Profissao = reader.IsDBNull(2) ? null : reader.GetString(2),
                                 foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) // Verifica se a coluna é DBNull
                             };
                             if (reader["foto"] != DBNull.Value)
@@ -201,9 +200,9 @@ namespace SistemasdeTarefas.Repository
                         {
                             Funcionario funcionario = new Funcionario
                             {
-                                Numero = reader.GetInt32(0),
-                                Nome = reader.GetString(1),
-                                Profissao = reader.GetString(2),
+                                Numero = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                                Nome = reader.IsDBNull(1) ? null : reader.GetString(1),
+                                Profissao = reader.IsDBNull(2) ? null : reader.GetString(2),
                                 foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) // Verifica se a coluna é DBNull
                             };
                             if (reader["foto"] != DBNull.Value)
