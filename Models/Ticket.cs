@@ -4,6 +4,8 @@
     {
         public int Id { get; set; }
         public int IdAluno { get; set; }
+        public int IdSaldoConsumo { get; set; }
+        public bool Apagado { get; set; }
         public string Nome { get; set; }
         public decimal ValorAlmo { get; set; }
 

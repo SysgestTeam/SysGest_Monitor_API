@@ -52,18 +52,21 @@ namespace SistemasdeTarefas.Repository
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
+                int idInserido = 0;
                 connection.Open();
                 using (SqlTransaction transaction = connection.BeginTransaction())
                 {
                     try
                     {
-                        // Query SQL para lançar o consumo
+                        // Query SQL para lançar o consumo e obter o ID gerado
                         string sqlQuery = @"
-                        DECLARE @IdAluno INT;
-                        SET @IdAluno = (SELECT IDALUNO FROM TABALUNOS WHERE NUMALUNO = @NumAluno);
-                        INSERT INTO SaldosConsumos (IDALUNO, UsedValue, Anulado, Deleted, DataRegisto, DataAlter, TimeRegist)
-                        VALUES (@IdAluno, @UsedValue, 0, 0, @DataRegisto, @DataAlter, @TimeRegist);
-                    ";
+                DECLARE @IdAluno INT;
+                SET @IdAluno = (SELECT IDALUNO FROM TABALUNOS WHERE NUMALUNO = @NumAluno);
+                INSERT INTO SaldosConsumos (IDALUNO, UsedValue, Anulado, Deleted, DataRegisto, DataAlter, TimeRegist)
+                VALUES (@IdAluno, @UsedValue, 0, 0, @DataRegisto, @DataAlter, @TimeRegist);
+
+                SELECT SCOPE_IDENTITY(); -- Retorna o último ID gerado
+                ";
 
                         using (SqlCommand cmd = new SqlCommand(sqlQuery, connection, transaction))
                         {
@@ -74,29 +77,29 @@ namespace SistemasdeTarefas.Repository
                             cmd.Parameters.Add(new SqlParameter("@DataAlter", SqlDbType.DateTime) { Value = DateTime.Now });
                             cmd.Parameters.Add(new SqlParameter("@TimeRegist", SqlDbType.Time) { Value = DateTime.Now.TimeOfDay });
 
-                            // Executar a query
-                            cmd.ExecuteNonQuery();
+                            // Executar a query e obter o ID gerado
+                            idInserido = Convert.ToInt32(cmd.ExecuteScalar());
                         }
 
-                        // Gerar o ticket
-                        GerarTicket(numAluno);
+                        // Gerar o ticket usando o ID inserido
+                        GerarTicket(numAluno, idInserido);
 
                         // Confirmar a transação
                         transaction.Commit();
                     }
                     catch (SqlException sqlEx)
                     {
-                        // Reverter a transação em caso de erro
+                        // Reverter a transação em caso de erro SQL
                         transaction.Rollback();
 
-                        // Log detalhado do erro da SP
+                        // Criar uma mensagem detalhada do erro
                         var errorMessage = "Erro ao realizar o lançamento de consumo ou gerar ticket. Detalhes do erro SQL: ";
                         foreach (SqlError error in sqlEx.Errors)
                         {
                             errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
                         }
 
-                        // Lançar uma exceção personalizada com os detalhes
+                        // Lançar uma exceção personalizada
                         throw new ApplicationException(errorMessage, sqlEx);
                     }
                     catch (Exception ex)
@@ -105,11 +108,12 @@ namespace SistemasdeTarefas.Repository
                         transaction.Rollback();
 
                         // Lançar uma exceção padrão
-                        throw new ApplicationException("Erro ao realizar o lançamento de consumo ou gerar ticket.", ex);
+                        throw new ApplicationException("Erro ao processar o pagamento: o ticket já foi gerado!", ex);
                     }
                 }
             }
         }
+
 
         public IEnumerable<Dashboard> Dashboad()
         {
@@ -143,7 +147,7 @@ namespace SistemasdeTarefas.Repository
             return dashboard;
         }
 
-        public void GerarTicket(int numAluno)
+        public void GerarTicket(int numAluno, int idsaldo)
         {
             try
             {
@@ -157,6 +161,7 @@ namespace SistemasdeTarefas.Repository
 
                         // Adicionar parâmetros
                         cmd.Parameters.Add(new SqlParameter("@NumAluno", SqlDbType.Int) { Value = numAluno });
+                        cmd.Parameters.Add(new SqlParameter("@ID_SaldosConsumos", SqlDbType.Int) { Value = idsaldo });
 
                         try
                         {
@@ -231,8 +236,17 @@ namespace SistemasdeTarefas.Repository
                 connection.Open();
 
                 // Consulta SQL para buscar as classes
-                string sqlQuery = $@"SELECT Id, IdAluno, UsedValue, DataRegisto,DataAlter FROM SaldosConsumos 
-                                    WHERE Id = {id}";
+                string sqlQuery = $@"SELECT 
+		                              Id, 
+		                              SaldosConsumos.IdAluno,
+		                              UsedValue,
+		                              DataRegisto,
+		                              DataAlter, 
+		                              TABALUNOS.NOME
+		                            FROM SaldosConsumos
+			                            JOIN TABALUNOS
+		                            ON  TABALUNOS.IDALUNO = SaldosConsumos.IdAluno 
+                                    WHERE SaldosConsumos.Id = {id}";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
                 {
@@ -247,6 +261,7 @@ namespace SistemasdeTarefas.Repository
                                 UsedValue = reader.GetDecimal(2),
                                 DataRegisto = reader.GetDateTime(3),
                                 DataAlter = reader.GetDateTime(4),
+                                Nome = reader.GetString(5),
                             };
 
                             SaldoConsumos.Add(saldoConsumo);
@@ -308,15 +323,22 @@ namespace SistemasdeTarefas.Repository
                 string sqlQuery = $@"
                         DECLARE @ValorArtigo AS NUMERIC(18,2);
 
-                        -- Obter o valor do artigo com código 9722
-                        SET @ValorArtigo = (SELECT PRCVENDA FROM TABARTIGOS WHERE CODIGO = 9722);
+                         -- Obter o valor do artigo com código 9722
+                         SET @ValorArtigo = (SELECT PRCVENDA FROM TABARTIGOS WHERE CODIGO = 9722);
 
-                        -- Listar apenas os tickets do dia atual
-                        SELECT *, 
-                               ValorAlmoco = @ValorArtigo
-                        FROM TABTICKET
-                        WHERE CAST(Data AS DATE) = CAST(GETDATE() AS DATE)
-                        ORDER BY Data DESC;";
+                         -- Listar apenas os tickets do dia atual
+                         SELECT TABTICKET.Id,
+		                        TABALUNOS.NUMALUNO AS IDAluno,
+                                 TABTICKET.Nome, 
+		                        TABTICKET.Data, 
+                                TABTICKET.NumeroTicket, 
+                                ValorAlmoco = @ValorArtigo,
+                                Apagado
+                         FROM TABTICKET
+                         JOIN TABALUNOS
+                         ON TABALUNOS.IDALUNO = TABTICKET.IdAluno
+                         WHERE CAST(Data AS DATE) = CAST(GETDATE() AS DATE)
+                         ORDER BY Data DESC";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
                 {
@@ -331,7 +353,8 @@ namespace SistemasdeTarefas.Repository
                                 Nome = reader.GetString(2),
                                 Data = reader.GetDateTime(3),
                                 NumeroTicket = reader.GetInt32(4),
-                                ValorAlmo = reader.GetDecimal(5)
+                                ValorAlmo = reader.GetDecimal(5),
+                                Apagado = reader.GetBoolean(6)
 
                             };
 
@@ -373,7 +396,9 @@ namespace SistemasdeTarefas.Repository
                                 Nome = reader.GetString(2),
                                 Data = reader.GetDateTime(3),
                                 NumeroTicket = reader.GetInt32(4),
-                                ValorAlmo = reader.GetDecimal(5)
+                                ValorAlmo = reader.GetDecimal(7),
+                                IdSaldoConsumo = reader.GetInt32(6),
+                                Apagado = reader.GetBoolean(5)
 
                             };
 

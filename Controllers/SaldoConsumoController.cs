@@ -31,14 +31,29 @@ public class SaldoConsumoController : ControllerBase
             var alunos = _SaldoRepository.List();
             return alunos;
         }
-
     }
 
     [HttpPost("lancamento-consumo")]
-    public void post(DtoConsumo dto)
+    public IActionResult LancarConsumo(DtoConsumo dto)
     {
-        _SaldoRepository.Consumo(dto.numAluno, dto.usedValue);
+        try
+        {
+            _SaldoRepository.Consumo(dto.numAluno, dto.usedValue);
+            return Ok(new { mensagem = "Consumo registrado com sucesso." });
+        }
+        catch (ApplicationException ex)
+        {
+            // Retorna um BadRequest com a mensagem de erro específica
+            return BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            // Logar o erro antes de retornar a resposta
+            // _logger.LogError(ex, "Erro interno ao processar a solicitação.");
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
     }
+
 
     [HttpGet("historico")]
     public IEnumerable<SaldoConsumo> get(int NumALuno)
@@ -81,19 +96,14 @@ public class SaldoConsumoController : ControllerBase
     {
         // Obter a lista de tickets
         var alunos = _SaldoRepository.ListTicket(NumAluno);
-
-        // Retornar os tickets no formato JSON
         return Ok(alunos);
     }
     catch (ApplicationException ex)
     {
-        // Erro específico da aplicação, retornando com detalhes
         return BadRequest(new { mensagem = ex.Message });
     }
     catch (Exception ex)
     {
-        // Erro genérico, logando detalhes e retornando mensagem genérica
-        // Logger.LogError(ex, "Erro ao obter tickets para o aluno.");
         return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
     }
 }
