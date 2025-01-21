@@ -200,7 +200,7 @@ namespace SistemasdeTarefas.Repository
 
                 // Consulta SQL para buscar as classes
                 string sqlQuery = $@"SELECT Id, IdAluno, UsedValue, DataRegisto,DataAlter FROM SaldosConsumos 
-                                    WHERE IdAluno = (SELECT IdAluno FROM TABALUNOS WHERE NUMALUNO = {NumeroAluno})
+                                    WHERE IdAluno = (SELECT IdAluno FROM TABALUNOS WHERE NUMALUNO = {NumeroAluno}) AND Anulado <> 1
                                     ORDER BY DataRegisto DESC";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
@@ -333,7 +333,8 @@ namespace SistemasdeTarefas.Repository
 		                        TABTICKET.Data, 
                                 TABTICKET.NumeroTicket, 
                                 ValorAlmoco = @ValorArtigo,
-                                Apagado
+                                Apagado,
+                                ID_SaldosConsumos
                          FROM TABTICKET
                          JOIN TABALUNOS
                          ON TABALUNOS.IDALUNO = TABTICKET.IdAluno
@@ -354,7 +355,8 @@ namespace SistemasdeTarefas.Repository
                                 Data = reader.GetDateTime(3),
                                 NumeroTicket = reader.GetInt32(4),
                                 ValorAlmo = reader.GetDecimal(5),
-                                Apagado = reader.GetBoolean(6)
+                                Apagado = reader.GetBoolean(6),
+                                IdSaldoConsumo = reader.GetInt32(7)
 
                             };
 
@@ -483,6 +485,69 @@ Valor: 4.000 AOA
             else
             {
                 Console.WriteLine("Nenhuma impressora padrão configurada.");
+            }
+        }
+
+        public void RemoverSaldoEEliminarTicket(int idsaldo, bool apagado)
+        {
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                int idInserido = 0;
+                connection.Open();
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // Query SQL para lançar o consumo e obter o ID gerado
+                        string sqlQuery = @" BEGIN TRANSACTION
+
+	                     UPDATE TABTICKET SET Apagado = @apagado
+	                     WHERE ID_SaldosConsumos = @idSaldo
+
+	                     UPDATE SaldosConsumos SET Anulado = @apagado
+	                     WHERE Id = @idSaldo
+
+                         COMMIT;
+                        ";
+
+                        using (SqlCommand cmd = new SqlCommand(sqlQuery, connection, transaction))
+                        {
+                            // Adicionar parâmetros
+                            cmd.Parameters.Add(new SqlParameter("@idSaldo", SqlDbType.Int) { Value = idsaldo });
+                            cmd.Parameters.Add(new SqlParameter("@apagado", SqlDbType.Bit) { Value = apagado });
+
+                            // Executar a query e obter o ID gerado
+                            idInserido = Convert.ToInt32(cmd.ExecuteScalar());
+                        }
+
+
+                        // Confirmar a transação
+                        transaction.Commit();
+                    }
+                    catch (SqlException sqlEx)
+                    {
+                        // Reverter a transação em caso de erro SQL
+                        transaction.Rollback();
+
+                        // Criar uma mensagem detalhada do erro
+                        var errorMessage = "Erro ao realizar Inactivar ou Activar o Ticket!";
+                        foreach (SqlError error in sqlEx.Errors)
+                        {
+                            errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
+                        }
+
+                        // Lançar uma exceção personalizada
+                        throw new ApplicationException(errorMessage, sqlEx);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Reverter a transação para erros genéricos
+                        transaction.Rollback();
+
+                        // Lançar uma exceção padrão
+                        throw new ApplicationException("Erro ao processar o pagamento: o ticket já foi gerado!", ex);
+                    }
+                }
             }
         }
 

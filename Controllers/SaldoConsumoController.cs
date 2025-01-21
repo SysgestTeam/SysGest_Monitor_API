@@ -55,6 +55,28 @@ public class SaldoConsumoController : ControllerBase
     }
 
 
+    [HttpDelete]
+    public IActionResult put(int idsaldo, bool apagado)
+    {
+        try
+        {
+            _SaldoRepository.RemoverSaldoEEliminarTicket(idsaldo, apagado);
+            return Ok(new { mensagem = "Ticket Actulizado com sucesso!" });
+        }
+        catch (ApplicationException ex)
+        {
+            // Retorna um BadRequest com a mensagem de erro específica
+            return BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            // Logar o erro antes de retornar a resposta
+            // _logger.LogError(ex, "Erro interno ao processar a solicitação.");
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
+
+
     [HttpGet("historico")]
     public IEnumerable<SaldoConsumo> get(int NumALuno)
     {

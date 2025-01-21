@@ -9,6 +9,7 @@ namespace SistemasdeTarefas.Interface
         IEnumerable<SaldoConsumo> GetHistóricoConsumoById(int id);
         public void Consumo(int numAluno, decimal UsedValue);
         public void GerarTicket(int numAluno, int idsaldo);
+        public void RemoverSaldoEEliminarTicket(int idsaldo, bool apagado);
         public IEnumerable<Ticket> ListTicket(int numAluno);
         public IEnumerable<Ticket> List();
         public IEnumerable<Dashboard> Dashboad();
