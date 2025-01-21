@@ -60,7 +60,7 @@ public class SaldoConsumoController : ControllerBase
     {
         try
         {
-            _SaldoRepository.RemoverSaldoEEliminarTicket(idsaldo, apagado);
+            _SaldoRepository.RemoverSaldoETicket(idsaldo, apagado);
             return Ok(new { mensagem = "Ticket Actulizado com sucesso!" });
         }
         catch (ApplicationException ex)

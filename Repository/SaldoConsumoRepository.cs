@@ -15,7 +15,6 @@ namespace SistemasdeTarefas.Repository
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
-
         public IEnumerable<CalculoParaEstatistica> CalculoParaEstatistica()
         {
             List<CalculoParaEstatistica> dashboard = new List<CalculoParaEstatistica>();
@@ -47,7 +46,6 @@ namespace SistemasdeTarefas.Repository
 
             return dashboard;
         }
-
         public void Consumo(int numAluno, decimal usedValue)
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))
@@ -113,8 +111,6 @@ namespace SistemasdeTarefas.Repository
                 }
             }
         }
-
-
         public IEnumerable<Dashboard> Dashboad()
         {
             List<Dashboard> dashboard = new List<Dashboard>();
@@ -146,7 +142,6 @@ namespace SistemasdeTarefas.Repository
 
             return dashboard;
         }
-
         public void GerarTicket(int numAluno, int idsaldo)
         {
             try
@@ -189,7 +184,6 @@ namespace SistemasdeTarefas.Repository
                 throw new ApplicationException("Erro ao gerar o ticket.", ex);
             }
         }
-
         public IEnumerable<SaldoConsumo> GetHistóricoConsumo(int NumeroAluno)
         {
             List<SaldoConsumo> SaldoConsumos = new List<SaldoConsumo>();
@@ -226,7 +220,6 @@ namespace SistemasdeTarefas.Repository
                 return SaldoConsumos;
             }
         }
-
         public IEnumerable<SaldoConsumo> GetHistóricoConsumoById(int id)
         {
             List<SaldoConsumo> SaldoConsumos = new List<SaldoConsumo>();
@@ -272,7 +265,6 @@ namespace SistemasdeTarefas.Repository
                 return SaldoConsumos;
             }
         }
-
         public IEnumerable<SaldoConsumo> GetSaldoConsumo(int NumeroAluno)
         {
             List<SaldoConsumo> SaldoConsumos = new List<SaldoConsumo>();
@@ -310,7 +302,6 @@ namespace SistemasdeTarefas.Repository
 
             return SaldoConsumos;
         }
-
         public IEnumerable<Ticket> List()
         {
             List<Ticket> SaldoConsumos = new List<Ticket>();
@@ -368,7 +359,6 @@ namespace SistemasdeTarefas.Repository
 
             return SaldoConsumos;
         }
-
         public IEnumerable<Ticket> ListTicket(int numAluno)
         {
             List<Ticket> SaldoConsumos = new List<Ticket>();
@@ -412,7 +402,6 @@ namespace SistemasdeTarefas.Repository
 
             return SaldoConsumos;
         }
-
         public void PrintTicket(int numAluno)
         {
             IEnumerable<Ticket> tickets = ListTicket(numAluno);
@@ -488,7 +477,7 @@ Valor: 4.000 AOA
             }
         }
 
-        public void RemoverSaldoEEliminarTicket(int idsaldo, bool apagado)
+        public void RemoverSaldoETicket(int idsaldo, bool apagado)
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
@@ -550,8 +539,6 @@ Valor: 4.000 AOA
                 }
             }
         }
-
-        // Função para manipular o nome (pegar primeiro e último nome)
         private string ManipulateName(string fullName)
         {
             var nameParts = fullName.Split(' ');
