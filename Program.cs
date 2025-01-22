@@ -71,6 +71,7 @@ namespace SistemasdeTarefas
                 });
             });
 
+          
             // Configuração do Swagger
             builder.Services.AddSwaggerGen(c =>
             {

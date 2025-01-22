@@ -10,10 +10,12 @@ namespace SistemasdeTarefas.Repository
     public class SaldoConsumoRepository : ISaldoConsumo
     {
         private readonly string _connectionString;
+        private readonly string _codigo;
 
         public SaldoConsumoRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
+            _codigo = configuration.GetConnectionString("CodigoAlmoco");
         }
         public IEnumerable<CalculoParaEstatistica> CalculoParaEstatistica()
         {
@@ -277,7 +279,7 @@ namespace SistemasdeTarefas.Repository
                 string sqlQuery = $@"
                             declare @TOTALDEP AS NUMERIC(18,2), @TOTALCONSUMOS AS NUMERIC(18,2), @IDALUNO AS INT, @ValorArtigo  AS NUMERIC(18,2)   
                             SET @IDALUNO =  ( SELECT  IdALuno FROM  TABALUNOS WHERE NUMALUNO = {NumeroAluno} )
-                            SET @ValorArtigo = (SELECT PRCVENDA FROM TABARTIGOS  WHERE CODIGO = 9722)
+                            SET @ValorArtigo = (SELECT PRCVENDA FROM TABARTIGOS  WHERE CODIGO = {_codigo})
                             SET @TOTALDEP = (select isnull((select sum(DepValue) from DepSaldos where idaluno = @IDALUNO and Anulado = 0 and Deleted = 0), 0)) 
                             SET @TOTALCONSUMOS = (select isnull((select sum(UsedValue) from SaldosConsumos where idaluno = @IDALUNO and Anulado = 0 and Deleted = 0), 0)) 
                             select SALDO = @TOTALDEP - @TOTALCONSUMOS, ValorAlmoco = @ValorArtigo";
@@ -314,7 +316,7 @@ namespace SistemasdeTarefas.Repository
                 string sqlQuery = $@"
                         DECLARE @ValorArtigo AS NUMERIC(18,2);
 
-                         -- Obter o valor do artigo com código 9722
+                         -- Obter o valor do artigo com código  {_codigo}
                          SET @ValorArtigo = (SELECT PRCVENDA FROM TABARTIGOS WHERE CODIGO = 9722);
 
                          -- Listar apenas os tickets do dia atual
@@ -370,7 +372,7 @@ namespace SistemasdeTarefas.Repository
                 // Consulta SQL para buscar as classes
                         string sqlQuery = $@"
                         DECLARE  @ValorArtigo  AS NUMERIC(18,2)
-                        SET @ValorArtigo = (SELECT PRCVENDA FROM TABARTIGOS  WHERE CODIGO = 9722)
+                        SET @ValorArtigo = (SELECT PRCVENDA FROM TABARTIGOS  WHERE CODIGO = {_codigo})
                         SELECT TOP 1 *,ValorAlmoco = @ValorArtigo FROM TABTICKET
                         WHERE IdAluno =  (SELECT IDALUNO FROM TABALUNOS WHERE NUMALUNO = {numAluno})
                         ORDER BY Data DESC";
