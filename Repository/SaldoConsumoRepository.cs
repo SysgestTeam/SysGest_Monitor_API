@@ -478,7 +478,6 @@ Valor: 4.000 AOA
                 Console.WriteLine("Nenhuma impressora padrão configurada.");
             }
         }
-
         public void RemoverSaldoETicket(int idsaldo, bool apagado)
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))

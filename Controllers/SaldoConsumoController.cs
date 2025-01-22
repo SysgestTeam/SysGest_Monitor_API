@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
@@ -95,6 +96,7 @@ public class SaldoConsumoController : ControllerBase
     }
 
     [HttpGet("dashboard")]
+    [EnableCors("AllowAll")]
     public IEnumerable<Dashboard> dashboard()
     {
         var alunos = _SaldoRepository.Dashboad();
