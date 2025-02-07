@@ -113,7 +113,7 @@ namespace SistemasdeTarefas.Repository
                             Cartao cartao = new Cartao
                             {
                                 Nome = reader.GetString(0),
-                                CodigoCartao = reader.GetString(1),
+                                CodigoCartao = reader.IsDBNull(1) ? null : reader.GetString(1),
                                 NomeTurma = reader.GetString(2),
                                 Foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3),
                                 NumAluno = reader.GetInt32(4),

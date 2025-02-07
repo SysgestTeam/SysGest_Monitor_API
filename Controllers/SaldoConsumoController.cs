@@ -17,15 +17,15 @@ public class SaldoConsumoController : ControllerBase
     }
 
     [HttpGet]
-    public IEnumerable<SaldoConsumo> Get(int NumALuno) {
-        {
+    [EnableCors("AllowAll")]
+    public IEnumerable<SaldoConsumo> Get(int NumALuno) 
+    {
             var alunos = _SaldoRepository.GetSaldoConsumo(NumALuno);
             return alunos;
-        }
-
     }
 
     [HttpGet("listar-todos-ticket")]
+    [EnableCors("AllowAll")]
     public IEnumerable<Ticket> Get()
     {
         {
@@ -35,6 +35,7 @@ public class SaldoConsumoController : ControllerBase
     }
 
     [HttpPost("lancamento-consumo")]
+    [EnableCors("AllowAll")]
     public IActionResult LancarConsumo(DtoConsumo dto)
     {
         try
@@ -44,19 +45,17 @@ public class SaldoConsumoController : ControllerBase
         }
         catch (ApplicationException ex)
         {
-            // Retorna um BadRequest com a mensagem de erro específica
             return BadRequest(new { mensagem = ex.Message });
         }
         catch (Exception ex)
         {
-            // Logar o erro antes de retornar a resposta
-            // _logger.LogError(ex, "Erro interno ao processar a solicitação.");
             return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
         }
     }
 
 
-    [HttpDelete]
+    [HttpPost]
+    [EnableCors("AllowAll")]
     public IActionResult put(int idsaldo, bool apagado)
     {
         try
@@ -66,19 +65,17 @@ public class SaldoConsumoController : ControllerBase
         }
         catch (ApplicationException ex)
         {
-            // Retorna um BadRequest com a mensagem de erro específica
             return BadRequest(new { mensagem = ex.Message });
         }
         catch (Exception ex)
         {
-            // Logar o erro antes de retornar a resposta
-            // _logger.LogError(ex, "Erro interno ao processar a solicitação.");
             return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
         }
     }
 
 
     [HttpGet("historico")]
+    [EnableCors("AllowAll")]
     public IEnumerable<SaldoConsumo> get(int NumALuno)
     {
         var alunos = _SaldoRepository.GetHistóricoConsumo(NumALuno);
@@ -86,8 +83,8 @@ public class SaldoConsumoController : ControllerBase
         return alunos;
     }
 
-
     [HttpGet("historico-by-id")]
+    [EnableCors("AllowAll")]
     public IEnumerable<SaldoConsumo> getHistoricobyId(int id)
     {
         var alunos = _SaldoRepository.GetHistóricoConsumoById(id);
@@ -105,6 +102,7 @@ public class SaldoConsumoController : ControllerBase
     }
 
     [HttpGet("calculo")]
+    [EnableCors("AllowAll")]
     public IEnumerable<CalculoParaEstatistica> calculo()
     {
         var alunos = _SaldoRepository.CalculoParaEstatistica();
@@ -114,22 +112,62 @@ public class SaldoConsumoController : ControllerBase
 
 
     [HttpGet("ticket")]
+    [EnableCors("AllowAll")]
     public IActionResult Ticket(int NumAluno)
-{
-    try
     {
-        // Obter a lista de tickets
-        var alunos = _SaldoRepository.ListTicket(NumAluno);
-        return Ok(alunos);
+        try
+        {
+            var alunos = _SaldoRepository.ListTicket(NumAluno);
+            return Ok(alunos);
+        }
+        catch (ApplicationException ex)
+        {
+            return BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
     }
-    catch (ApplicationException ex)
-    {
-        return BadRequest(new { mensagem = ex.Message });
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
-    }
-}
 
+
+
+    [HttpGet("ticket-todos")]
+    [EnableCors("AllowAll")]
+    public IActionResult Ticket()
+    {
+        try
+        {
+            var alunos = _SaldoRepository.ListTicket();
+            return Ok(alunos);
+        }
+        catch (ApplicationException ex)
+        {
+            return BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
+
+
+    [HttpGet("filtrar-tickets-por-data")]
+    [EnableCors("AllowAll")]
+    public IActionResult FiltrarTicketsPorData(DateTime? DataInicio = null, DateTime? DataFim = null)
+    {
+        try
+        {
+            var alunos = _SaldoRepository.FiltrarTicketsPorData(DataInicio,DataFim);
+            return Ok(alunos);
+        }
+        catch (ApplicationException ex)
+        {
+            return BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
 }

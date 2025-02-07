@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
 using System.Drawing.Printing;
+using System.Transactions;
 
 namespace SistemasdeTarefas.Repository
 {
@@ -58,56 +59,46 @@ namespace SistemasdeTarefas.Repository
                 {
                     try
                     {
-                        // Query SQL para lançar o consumo e obter o ID gerado
                         string sqlQuery = @"
-                DECLARE @IdAluno INT;
-                SET @IdAluno = (SELECT IDALUNO FROM TABALUNOS WHERE NUMALUNO = @NumAluno);
-                INSERT INTO SaldosConsumos (IDALUNO, UsedValue, Anulado, Deleted, DataRegisto, DataAlter, TimeRegist)
-                VALUES (@IdAluno, @UsedValue, 0, 0, @DataRegisto, @DataAlter, @TimeRegist);
+                            DECLARE @IdAluno INT;
+                            SET @IdAluno = (SELECT IDALUNO FROM TABALUNOS WHERE NUMALUNO = @NumAluno);
+                            INSERT INTO SaldosConsumos (IDALUNO, UsedValue, Anulado, Deleted, DataRegisto, DataAlter, TimeRegist)
+                            VALUES (@IdAluno, @UsedValue, 0, 0, @DataRegisto, @DataAlter, @TimeRegist);
 
-                SELECT SCOPE_IDENTITY(); -- Retorna o último ID gerado
-                ";
+                            SELECT SCOPE_IDENTITY(); -- Retorna o último ID gerado
+                        ";
 
                         using (SqlCommand cmd = new SqlCommand(sqlQuery, connection, transaction))
                         {
-                            // Adicionar parâmetros
                             cmd.Parameters.Add(new SqlParameter("@NumAluno", SqlDbType.Int) { Value = numAluno });
                             cmd.Parameters.Add(new SqlParameter("@UsedValue", SqlDbType.Decimal) { Value = usedValue });
                             cmd.Parameters.Add(new SqlParameter("@DataRegisto", SqlDbType.DateTime) { Value = DateTime.Now });
                             cmd.Parameters.Add(new SqlParameter("@DataAlter", SqlDbType.DateTime) { Value = DateTime.Now });
                             cmd.Parameters.Add(new SqlParameter("@TimeRegist", SqlDbType.Time) { Value = DateTime.Now.TimeOfDay });
 
-                            // Executar a query e obter o ID gerado
                             idInserido = Convert.ToInt32(cmd.ExecuteScalar());
                         }
 
-                        // Gerar o ticket usando o ID inserido
                         GerarTicket(numAluno, idInserido);
 
-                        // Confirmar a transação
                         transaction.Commit();
                     }
                     catch (SqlException sqlEx)
                     {
-                        // Reverter a transação em caso de erro SQL
                         transaction.Rollback();
 
-                        // Criar uma mensagem detalhada do erro
                         var errorMessage = "Erro ao realizar o lançamento de consumo ou gerar ticket. Detalhes do erro SQL: ";
                         foreach (SqlError error in sqlEx.Errors)
                         {
                             errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
                         }
 
-                        // Lançar uma exceção personalizada
                         throw new ApplicationException(errorMessage, sqlEx);
                     }
                     catch (Exception ex)
                     {
-                        // Reverter a transação para erros genéricos
                         transaction.Rollback();
 
-                        // Lançar uma exceção padrão
                         throw new ApplicationException("Erro ao processar o pagamento: o ticket já foi gerado!", ex);
                     }
                 }
@@ -121,7 +112,7 @@ namespace SistemasdeTarefas.Repository
             {
                 connection.Open();
 
-                string sqlQuery = "sp_ObterEstatisticasTicket"; // Chame o procedimento armazenado
+                string sqlQuery = "sp_ObterEstatisticasTicket"; 
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
                 {
@@ -131,7 +122,7 @@ namespace SistemasdeTarefas.Repository
                         {
                             Dashboard dados = new Dashboard
                             {
-                                TotalTicket = reader.GetInt32(0), // Coluna do tipo int (substitua pelo tipo correto se necessário)
+                                TotalTicket = reader.GetInt32(0), 
                                 TotalAlunos = reader.GetInt32(1),
                                 AlunosSemSaldos = reader.GetInt32(2)
                             };
@@ -143,6 +134,45 @@ namespace SistemasdeTarefas.Repository
             }
 
             return dashboard;
+        }
+        public IEnumerable<Ticket> FiltrarTicketsPorData(DateTime? DataInicio = null, DateTime? DataFim = null)
+        {
+            List<Ticket> SaldoConsumos = new List<Ticket>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                using (SqlCommand cmd = new SqlCommand("FiltrarTicketsPorData", connection))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(new SqlParameter("@DataInicio", SqlDbType.DateTime) { Value = DataInicio });
+                    cmd.Parameters.Add(new SqlParameter("@DataFim", SqlDbType.DateTime) { Value = DataFim });
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Ticket saldoConsumo = new Ticket
+                            {
+                                Id = reader.GetInt32(0),
+                                IdAluno = reader.GetInt32(1),
+                                Nome = reader.GetString(2),
+                                Data = reader.GetDateTime(3),
+                                NumeroTicket = reader.GetInt32(4),
+                                ValorAlmo = reader.GetDecimal(7),
+                                Apagado = reader.GetBoolean(5),
+                                IdSaldoConsumo = reader.GetInt32(6)
+
+                            };
+
+                            SaldoConsumos.Add(saldoConsumo);
+                        }
+                    }
+                }
+            }
+
+            return SaldoConsumos;
         }
         public void GerarTicket(int numAluno, int idsaldo)
         {
@@ -156,25 +186,21 @@ namespace SistemasdeTarefas.Repository
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
-                        // Adicionar parâmetros
                         cmd.Parameters.Add(new SqlParameter("@NumAluno", SqlDbType.Int) { Value = numAluno });
                         cmd.Parameters.Add(new SqlParameter("@ID_SaldosConsumos", SqlDbType.Int) { Value = idsaldo });
 
                         try
                         {
-                            // Executar a stored procedure
                             cmd.ExecuteNonQuery();
                         }
                         catch (SqlException sqlEx)
                         {
-                            // Captura e detalha os erros gerados pela stored procedure
                             var errorMessage = "Erro ao executar a stored procedure 'sp_CriarTicket'. Detalhes do erro SQL:";
                             foreach (SqlError error in sqlEx.Errors)
                             {
                                 errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
                             }
 
-                            // Lançar uma exceção personalizada com os detalhes
                             throw new ApplicationException(errorMessage, sqlEx);
                         }
                     }
@@ -182,7 +208,6 @@ namespace SistemasdeTarefas.Repository
             }
             catch (Exception ex)
             {
-                // Tratar exceções genéricas
                 throw new ApplicationException("Erro ao gerar o ticket.", ex);
             }
         }
@@ -194,7 +219,6 @@ namespace SistemasdeTarefas.Repository
             {
                 connection.Open();
 
-                // Consulta SQL para buscar as classes
                 string sqlQuery = $@"SELECT Id, IdAluno, UsedValue, DataRegisto,DataAlter FROM SaldosConsumos 
                                     WHERE IdAluno = (SELECT IdAluno FROM TABALUNOS WHERE NUMALUNO = {NumeroAluno}) AND Anulado <> 1
                                     ORDER BY DataRegisto DESC";
@@ -230,7 +254,6 @@ namespace SistemasdeTarefas.Repository
             {
                 connection.Open();
 
-                // Consulta SQL para buscar as classes
                 string sqlQuery = $@"SELECT 
 		                              Id, 
 		                              SaldosConsumos.IdAluno,
@@ -316,8 +339,7 @@ namespace SistemasdeTarefas.Repository
                 string sqlQuery = $@"
                         DECLARE @ValorArtigo AS NUMERIC(18,2);
 
-                         -- Obter o valor do artigo com código  {_codigo}
-                         SET @ValorArtigo = (SELECT PRCVENDA FROM TABARTIGOS WHERE CODIGO = 9722);
+                         SET @ValorArtigo = (SELECT PRCVENDA FROM TABARTIGOS WHERE CODIGO = {_codigo});
 
                          -- Listar apenas os tickets do dia atual
                          SELECT TABTICKET.Id,
@@ -404,6 +426,50 @@ namespace SistemasdeTarefas.Repository
 
             return SaldoConsumos;
         }
+
+        public IEnumerable<Ticket> ListTicket()
+        {
+            List<Ticket> SaldoConsumos = new List<Ticket>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Consulta SQL para buscar as classes
+                string sqlQuery = $@"
+                        DECLARE  @ValorArtigo  AS NUMERIC(18,2)
+                        SET @ValorArtigo = (SELECT PRCVENDA FROM TABARTIGOS  WHERE CODIGO = {_codigo})
+                        SELECT TOP 1000 *,ValorAlmoco = @ValorArtigo FROM TABTICKET
+                        ORDER BY Data DESC";
+
+                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Ticket saldoConsumo = new Ticket
+                            {
+                                Id = reader.GetInt32(0),
+                                IdAluno = reader.GetInt32(1),
+                                Nome = reader.GetString(2),
+                                Data = reader.GetDateTime(3),
+                                NumeroTicket = reader.GetInt32(4),
+                                ValorAlmo = reader.GetDecimal(7),
+                                IdSaldoConsumo = reader.GetInt32(6),
+                                Apagado = reader.GetBoolean(5)
+
+                            };
+
+                            SaldoConsumos.Add(saldoConsumo);
+                        }
+                    }
+                }
+            }
+
+            return SaldoConsumos;
+        }
+
         public void PrintTicket(int numAluno)
         {
             IEnumerable<Ticket> tickets = ListTicket(numAluno);
@@ -420,19 +486,19 @@ namespace SistemasdeTarefas.Repository
 
             // Prepara o conteúdo do ticket
             string ticketContent = $@"
------------------------------------
-     Detalhe do Ticket 
------------------------------------
-     Sabor do Brasil 
------------------------------------
-Data: {ticketDate}
-Número do Ticket: {ticketNumber}
-Estudante: {ManipulateName(studentName)}
-ID Aluno: {studentId}
-Descrição: Almoço
-Valor: 4.000 AOA
-------------------------------
-";
+            -----------------------------------
+                 Detalhe do Ticket 
+            -----------------------------------
+                 Sabor do Brasil 
+            -----------------------------------
+            Data: {ticketDate}
+            Número do Ticket: {ticketNumber}
+            Estudante: {ManipulateName(studentName)}
+            ID Aluno: {studentId}
+            Descrição: Almoço
+            Valor: 4.000 AOA
+            ------------------------------
+            ";
 
             // Configura o objeto PrintDocument
             PrintDocument printDocument = new PrintDocument();

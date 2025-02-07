@@ -71,7 +71,7 @@ namespace SistemasdeTarefas
                 });
             });
 
-          
+
             // Configuração do Swagger
             builder.Services.AddSwaggerGen(c =>
             {
@@ -126,7 +126,7 @@ namespace SistemasdeTarefas
             app.UseCors("AllowAll");
 
             app.MapControllers();
-             app.Run();
+            app.Run();
         }
     }
 }
