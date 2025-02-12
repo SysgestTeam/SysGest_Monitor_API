@@ -25,6 +25,7 @@ namespace SistemasdeTarefas
             builder.Services.AddScoped<IProfessoresRepository, ProfessoresRepository>();
             builder.Services.AddScoped<IloginRepository, loginRepository>();
             builder.Services.AddScoped<ISaldoConsumo, SaldoConsumoRepository>();
+            builder.Services.AddScoped<IDividasRepository, DividasRepository>();
             var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 
 
