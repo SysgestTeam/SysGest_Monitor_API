@@ -4,7 +4,6 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
 using System.Drawing.Printing;
-using System.Transactions;
 
 namespace SistemasdeTarefas.Repository
 {
@@ -426,7 +425,6 @@ namespace SistemasdeTarefas.Repository
 
             return SaldoConsumos;
         }
-
         public IEnumerable<Ticket> ListTicket()
         {
             List<Ticket> SaldoConsumos = new List<Ticket>();
@@ -469,7 +467,6 @@ namespace SistemasdeTarefas.Repository
 
             return SaldoConsumos;
         }
-
         public void PrintTicket(int numAluno)
         {
             IEnumerable<Ticket> tickets = ListTicket(numAluno);

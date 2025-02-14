@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
-using SistemasdeTarefas.Models;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -37,6 +36,47 @@ public class DevedorController : ControllerBase
         }
     }
 
+
+
+    [HttpPost("bloqueio-cartao")]
+    [EnableCors("AllowAll")]
+    public void BloqueioEmMassa(int[] numAluno, bool emMassa = false)
+    {
+        try
+        {
+            _DividasRepository.BloqueioCartao(numAluno, emMassa);
+            Ok();
+        }
+        catch (ApplicationException ex)
+        {
+            BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+             StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
+
+
+
+    [HttpPost("bloqueio-cartao-por-mes")]
+    [EnableCors("AllowAll")]
+    public void BloquearDevedoresPorMes(DateTime dataInicial, DateTime dataFinal, int numeroMeses)
+    {
+        try
+        {
+            _DividasRepository.BloquearDevedoresPorMes(dataInicial,dataFinal, numeroMeses);
+            Ok();
+        }
+        catch (ApplicationException ex)
+        {
+            BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
 
 
 }
