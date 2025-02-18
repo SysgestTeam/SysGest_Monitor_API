@@ -58,11 +58,20 @@ namespace SistemasdeTarefas.Controllers
             var inexistenciaCards = _existenciaCardRepository.GetInexistenciaCard();
             return Ok(inexistenciaCards);
         }
+
         [HttpGet("Cartão-Bloqueado")]
         public ActionResult<IEnumerable<Existencia_Card>> GetBloqueados()
         {
             var inexistenciaCards = _existenciaCardRepository.GetBloqueados();
             return Ok(inexistenciaCards);
-        } 
+        }
+
+
+        [HttpGet("todos-cartoes")]
+        public ActionResult<IEnumerable<Existencia_Card>> GetTodos()
+        {
+            var inexistenciaCards = _existenciaCardRepository.GetTodosCartoes();
+            return Ok(inexistenciaCards);
+        }
     }
 }

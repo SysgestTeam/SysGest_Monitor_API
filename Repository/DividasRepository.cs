@@ -185,5 +185,86 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
+
+        public void DesbloqueioCartao(int[] numAluno = null)
+        {
+            if (numAluno == null)
+            {
+                throw new ArgumentException("A lista de alunos não pode ser nula");
+            }
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                {
+                    connection.Open();
+
+                    // Obtém o ID do último ano letivo
+                    string anoQuery = "SELECT MAX(IDANO) FROM TABANOSLECTIVOS";
+                    int idAno;
+                    using (SqlCommand anoCmd = new SqlCommand(anoQuery, connection))
+                    {
+                        idAno = (int)anoCmd.ExecuteScalar();
+                    }
+
+                    // Inicia a transação
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        try
+                        {
+                                // Se emMassa for false, garante que a lista tenha pelo menos 1 aluno
+                                if (numAluno.Length == 0)
+                                {
+                                    throw new ArgumentException("A lista de alunos não pode estar vazia.");
+                                }
+
+                                // Divide os alunos em lotes de 1000 para evitar problemas com IN
+                                int chunkSize = 1000;
+                                for (int i = 0; i < numAluno.Length; i += chunkSize)
+                                {
+                                    var chunk = numAluno.Skip(i).Take(chunkSize);
+                                    string alunoList = string.Join(",", chunk);
+
+                                    if (string.IsNullOrEmpty(alunoList))
+                                        continue;
+
+                                    string query = @$"
+                                    UPDATE CartaoAluno 
+                                    SET Bloqueado = 0 
+                                    WHERE NumAluno IN ({alunoList}) AND IdAno = @idAno";
+
+                                    using (SqlCommand cmd = new SqlCommand(query, connection, transaction))
+                                    {
+                                        cmd.Parameters.AddWithValue("@idAno", idAno);
+                                        cmd.ExecuteNonQuery();
+                                    }
+                                }
+
+                            // Commit da transação
+                            transaction.Commit();
+                        }
+                        catch (Exception ex)
+                        {
+                            // Caso haja erro, faz o rollback
+                            transaction.Rollback();
+                            throw new ApplicationException("Erro ao bloquear os cartões. Operação revertida.", ex);
+                        }
+                    }
+                }
+            }
+            catch (SqlException sqlEx)
+            {
+                var errorMessage = "Erro ao executar o bloqueio dos cartões. Detalhes do erro SQL:";
+                foreach (SqlError error in sqlEx.Errors)
+                {
+                    errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
+                }
+                throw new ApplicationException(errorMessage, sqlEx);
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("Erro ao bloquear os cartões.", ex);
+            }
+        }
     }
 }

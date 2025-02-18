@@ -151,7 +151,6 @@ namespace SistemasdeTarefas.Repository
 
             return inexistenciaCards;
         }
-
         public IEnumerable<Existencia_Card> GetInexistenciaCardFiltro(int? idclasse = null, int? idturma = null)
         {
             List<Existencia_Card> alunos = new List<Existencia_Card>();
@@ -235,7 +234,6 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-
         public IEnumerable<Existencia_Card> GetInexistenciaCardSemAcompanhateFiltro(int? idclasse = null, int? idturma = null)
         {
             List<Existencia_Card> alunos = new List<Existencia_Card>();
@@ -276,6 +274,42 @@ namespace SistemasdeTarefas.Repository
             }
 
             return alunos;
+        }
+        public IEnumerable<Existencia_Card> GetTodosCartoes()
+        {
+            List<Existencia_Card> inexistenciaCards = new List<Existencia_Card>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Nome do procedimento armazenado
+                string query = @$"SELECT * FROM CartaoAluno
+                        WHERE IdAno = (SELECT MAX(IdAno) FROM TABANOSLECTIVOS)";
+
+                using (SqlCommand cmd = new SqlCommand(query, connection))
+                {
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Existencia_Card card = new Existencia_Card
+                            {
+                                NumAluno = reader.GetInt32(2), 
+                                Nome = reader.GetString(3),
+                                NomeTurma = reader.GetString(8),
+                                CodigoCartao = reader.GetString(10),
+                                Bloqueado = reader.GetBoolean(12),
+                            };
+
+                            inexistenciaCards.Add(card);
+                        }
+                    }
+                }
+            }
+
+            return inexistenciaCards;
         }
     }
 }

@@ -8,5 +8,6 @@
         public byte[] Foto { get; set; }
         public string CodigoCartao { get; set; }
         public decimal saldo { get; set; }
+        public bool Bloqueado { get; set; }
     }
 }

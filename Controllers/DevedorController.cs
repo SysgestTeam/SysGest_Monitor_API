@@ -58,6 +58,24 @@ public class DevedorController : ControllerBase
     }
 
 
+    [HttpPost("desbloqueio-cartao")]
+    [EnableCors("AllowAll")]
+    public void desbloqueio(int[] numAluno)
+    {
+        try
+        {
+            _DividasRepository.DesbloqueioCartao(numAluno);
+            Ok();
+        }
+        catch (ApplicationException ex)
+        {
+            BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
 
     [HttpPost("bloqueio-cartao-por-mes")]
     [EnableCors("AllowAll")]

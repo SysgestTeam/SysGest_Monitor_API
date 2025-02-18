@@ -98,7 +98,7 @@ namespace SistemasdeTarefas.Repository
                     {
                         transaction.Rollback();
 
-                        throw new ApplicationException("Erro ao processar o pagamento: o ticket já foi gerado!", ex);
+                        throw new ApplicationException("Atingiu o limite diário!", ex);
                     }
                 }
             }
