@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
@@ -17,6 +18,7 @@ public class LoginController : ControllerBase
 
 
     [HttpPost]
+    [EnableCors("AllowAll")]
     public string post(Login user)
     {
         var token = string.Empty;

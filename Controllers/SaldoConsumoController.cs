@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
@@ -19,6 +18,7 @@ public class SaldoConsumoController : ControllerBase
 
     [HttpGet]
     [EnableCors("AllowAll")]
+
     public IEnumerable<SaldoConsumo> Get(int NumALuno) 
     {
             var alunos = _SaldoRepository.GetSaldoConsumo(NumALuno);
