@@ -97,4 +97,23 @@ public class DevedorController : ControllerBase
     }
 
 
+    [HttpPost("log")]
+    [EnableCors("AllowAll")]
+    public void LogBloqueio(int IsAluno, int IdEntidade, string TipoBloqueio, string AcaoBloqueio)
+    {
+        try
+        {
+            _DividasRepository.LogBloqueio(IsAluno, IdEntidade, TipoBloqueio, AcaoBloqueio);
+            Ok();
+        }
+        catch (ApplicationException ex)
+        {
+            BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
+
 }

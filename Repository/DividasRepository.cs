@@ -139,7 +139,6 @@ namespace SistemasdeTarefas.Repository
             }
         }
 
-
         public IEnumerable<Devedor> GetDevedores(DateTime? dataInicial = null, DateTime? dataFinal = null)
         {
             List<Devedor> alunos = new List<Devedor>();
@@ -265,6 +264,49 @@ namespace SistemasdeTarefas.Repository
             {
                 throw new ApplicationException("Erro ao bloquear os cartões.", ex);
             }
+        }
+
+        public void LogBloqueio(int IsAluno, int IdEntidade, string TipoBloqueio, string AcaoBloqueio)
+        {
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+
+                        using (SqlCommand cmd = new SqlCommand("sp_InserirLogBloqueioCartao", connection, transaction))
+                        {
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.Parameters.Add(new SqlParameter("@IsAluno", SqlDbType.Bit) { Value = IsAluno });
+                            cmd.Parameters.Add(new SqlParameter("@IdEntidade", SqlDbType.Int) { Value = IdEntidade });
+                            cmd.Parameters.Add(new SqlParameter("@TipoBloqueio", SqlDbType.VarChar) { Value = TipoBloqueio });
+                            cmd.Parameters.Add(new SqlParameter("@AcaoBloqueio", SqlDbType.VarChar) { Value = AcaoBloqueio });
+
+                            cmd.ExecuteScalar();
+                        }
+
+
+                        transaction.Commit();
+                    }
+                    catch (SqlException sqlEx)
+                    {
+                        transaction.Rollback();
+
+                        var errorMessage = "Erro ao cadastra o log ";
+                        foreach (SqlError error in sqlEx.Errors)
+                        {
+                            errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
+                        }
+
+                        throw new ApplicationException(errorMessage, sqlEx);
+                    }
+                }
+            }
+
+
         }
     }
 }
