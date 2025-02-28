@@ -295,7 +295,7 @@ namespace SistemasdeTarefas.Repository
                     {
                         transaction.Rollback();
 
-                        var errorMessage = "Erro ao cadastra o log ";
+                        var errorMessage = "Erro ao cadastrar o log ";
                         foreach (SqlError error in sqlEx.Errors)
                         {
                             errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
