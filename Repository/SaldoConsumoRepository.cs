@@ -218,8 +218,8 @@ namespace SistemasdeTarefas.Repository
             {
                 connection.Open();
 
-                string sqlQuery = $@"SELECT Id, IdAluno, UsedValue, DataRegisto,DataAlter FROM SaldosConsumos 
-                                    WHERE IdAluno = (SELECT IdAluno FROM TABALUNOS WHERE NUMALUNO = {NumeroAluno}) AND Anulado <> 1
+                string sqlQuery = $@"SELECT Id, IdAluno, UsedValue, DataRegisto,DataAlter, Anulado FROM SaldosConsumos 
+                                    WHERE IdAluno = (SELECT IdAluno FROM TABALUNOS WHERE NUMALUNO = {NumeroAluno})
                                     ORDER BY DataRegisto DESC";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
@@ -235,6 +235,7 @@ namespace SistemasdeTarefas.Repository
                                 UsedValue = reader.GetDecimal(2),
                                 DataRegisto = reader.GetDateTime(3),
                                 DataAlter = reader.GetDateTime(4),
+                                Anulado = reader.GetBoolean(5)
                             };
 
                             SaldoConsumos.Add(saldoConsumo);
