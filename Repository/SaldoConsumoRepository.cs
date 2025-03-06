@@ -134,6 +134,12 @@ namespace SistemasdeTarefas.Repository
 
             return dashboard;
         }
+
+        public IEnumerable<DashboardTicketDia> DashoboarTickDia()
+        {
+            throw new NotImplementedException();
+        }
+
         public IEnumerable<Ticket> FiltrarTicketsPorData(DateTime? DataInicio = null, DateTime? DataFim = null)
         {
             List<Ticket> SaldoConsumos = new List<Ticket>();
