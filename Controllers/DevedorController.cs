@@ -116,4 +116,24 @@ public class DevedorController : ControllerBase
         }
     }
 
+
+    [HttpGet("log-bloqueio")]
+    [EnableCors("AllowAll")]
+    public IActionResult LogBloqueio(DateTime? dataInicial, DateTime? dataFinal)
+    {
+        try
+        {
+            var alunos = _DividasRepository.LogBloqueio(dataInicial, dataFinal);
+            return Ok(alunos);
+        }
+        catch (ApplicationException ex)
+        {
+            return BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
+
 }

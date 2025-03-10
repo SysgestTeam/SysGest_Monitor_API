@@ -106,6 +106,9 @@ namespace SistemasdeTarefas
                 });
             });
 
+
+
+
             var app = builder.Build();
             app.UseCors("AllowSpecificOrigin");
 

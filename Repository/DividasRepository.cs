@@ -13,11 +13,9 @@ namespace SistemasdeTarefas.Repository
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
-
         public void BloqueioCartao(int[] numAluno = null, bool emMassa = false)
         {
-            if (numAluno == null && !emMassa)
-            {
+            if (numAluno == null && !emMassa)            {
                 throw new ArgumentException("A lista de alunos não pode ser nula, a menos que seja um bloqueio em massa.");
             }
 
@@ -40,53 +38,72 @@ namespace SistemasdeTarefas.Repository
                     {
                         try
                         {
-                            // Se for em massa, bloqueia todos os alunos
                             if (emMassa)
                             {
+                                // Bloqueio em massa
                                 string queryEmMassa = "UPDATE CartaoAluno SET Bloqueado = 1 WHERE IdAno = @idAno";
                                 using (SqlCommand cmd = new SqlCommand(queryEmMassa, connection, transaction))
                                 {
                                     cmd.Parameters.AddWithValue("@idAno", idAno);
                                     cmd.ExecuteNonQuery();
                                 }
+
+                                // Chamada da Stored Procedure para o log
+                                using (SqlCommand logCmd = new SqlCommand("sp_InserirLogBloqueioCartao", connection, transaction))
+                                {
+                                    logCmd.CommandType = CommandType.StoredProcedure;
+                                    logCmd.Parameters.AddWithValue("@IsAluno", DBNull.Value);
+                                    logCmd.Parameters.AddWithValue("@IdEntidade", DBNull.Value);
+                                    logCmd.Parameters.AddWithValue("@TipoBloqueio", "Manual");
+                                    logCmd.Parameters.AddWithValue("@AcaoBloqueio", "Bloqueio");
+                                    logCmd.ExecuteNonQuery();
+                                }
                             }
                             else
                             {
-                                // Se emMassa for false, garante que a lista tenha pelo menos 1 aluno
                                 if (numAluno.Length == 0)
                                 {
                                     throw new ArgumentException("A lista de alunos não pode estar vazia.");
                                 }
 
-                                // Divide os alunos em lotes de 1000 para evitar problemas com IN
                                 int chunkSize = 1000;
                                 for (int i = 0; i < numAluno.Length; i += chunkSize)
                                 {
-                                    var chunk = numAluno.Skip(i).Take(chunkSize);
-                                    string alunoList = string.Join(",", chunk);
+                                    var chunk = numAluno.Skip(i).Take(chunkSize).ToList();
 
-                                    if (string.IsNullOrEmpty(alunoList))
-                                        continue;
-
-                                    string query = @$"
-                                UPDATE CartaoAluno 
-                                SET Bloqueado = 1 
-                                WHERE NumAluno IN ({alunoList}) AND IdAno = @idAno";
+                                    string query = "UPDATE CartaoAluno SET Bloqueado = 1 WHERE IdAno = @idAno AND NumAluno IN (" +
+                                                   string.Join(",", chunk.Select((_, idx) => $"@aluno{idx}")) + ")";
 
                                     using (SqlCommand cmd = new SqlCommand(query, connection, transaction))
                                     {
                                         cmd.Parameters.AddWithValue("@idAno", idAno);
+                                        for (int j = 0; j < chunk.Count; j++)
+                                        {
+                                            cmd.Parameters.AddWithValue($"@aluno{j}", chunk[j]);
+                                        }
                                         cmd.ExecuteNonQuery();
+                                    }
+
+                                    // Inserção dos logs para cada aluno
+                                    foreach (var aluno in chunk)
+                                    {
+                                        using (SqlCommand logCmd = new SqlCommand("sp_InserirLogBloqueioCartao", connection, transaction))
+                                        {
+                                            logCmd.CommandType = CommandType.StoredProcedure;
+                                            logCmd.Parameters.AddWithValue("@IsAluno", 1);
+                                            logCmd.Parameters.AddWithValue("@IdEntidade", aluno);
+                                            logCmd.Parameters.AddWithValue("@TipoBloqueio", "Manual");
+                                            logCmd.Parameters.AddWithValue("@AcaoBloqueio", "Bloqueio");
+                                            logCmd.ExecuteNonQuery();
+                                        }
                                     }
                                 }
                             }
 
-                            // Commit da transação
                             transaction.Commit();
                         }
                         catch (Exception ex)
                         {
-                            // Caso haja erro, faz o rollback
                             transaction.Rollback();
                             throw new ApplicationException("Erro ao bloquear os cartões. Operação revertida.", ex);
                         }
@@ -107,7 +124,6 @@ namespace SistemasdeTarefas.Repository
                 throw new ApplicationException("Erro ao bloquear os cartões.", ex);
             }
         }
-
         public void BloquearDevedoresPorMes(DateTime dataInicial, DateTime dataFinal, int numeroMeses)
         {
             List<int> alunosDevedores = new List<int>();
@@ -138,22 +154,17 @@ namespace SistemasdeTarefas.Repository
                 BloqueioCartao(alunosDevedores.ToArray(), false);
             }
         }
-
         public IEnumerable<Devedor> GetDevedores(DateTime? dataInicial = null, DateTime? dataFinal = null)
         {
             List<Devedor> alunos = new List<Devedor>();
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
-
-   
                 // Chame o procedimento armazenado
-
                 using (SqlCommand cmd = new SqlCommand("SP_DEVEDORES", connection))
                 {
 
                     cmd.CommandType = CommandType.StoredProcedure;
-
                     cmd.Parameters.Add(new SqlParameter("@DATAINI", SqlDbType.DateTime) { Value = dataInicial });
                     cmd.Parameters.Add(new SqlParameter("@DATAFIM", SqlDbType.DateTime) { Value = dataFinal });
 
@@ -184,7 +195,6 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-
         public void DesbloqueioCartao(int[] numAluno = null)
         {
             if (numAluno == null)
@@ -237,7 +247,20 @@ namespace SistemasdeTarefas.Repository
                                         cmd.Parameters.AddWithValue("@idAno", idAno);
                                         cmd.ExecuteNonQuery();
                                     }
+
+                                foreach (var aluno in chunk)
+                                {
+                                    using (SqlCommand logCmd = new SqlCommand("sp_InserirLogBloqueioCartao", connection, transaction))
+                                    {
+                                        logCmd.CommandType = CommandType.StoredProcedure;
+                                        logCmd.Parameters.AddWithValue("@IsAluno", 1);
+                                        logCmd.Parameters.AddWithValue("@IdEntidade", aluno);
+                                        logCmd.Parameters.AddWithValue("@TipoBloqueio", "Manual");
+                                        logCmd.Parameters.AddWithValue("@AcaoBloqueio", "Desloqueio");
+                                        logCmd.ExecuteNonQuery();
+                                    }
                                 }
+                            }
 
                             // Commit da transação
                             transaction.Commit();
@@ -265,7 +288,6 @@ namespace SistemasdeTarefas.Repository
                 throw new ApplicationException("Erro ao bloquear os cartões.", ex);
             }
         }
-
         public void LogBloqueio(int IsAluno, int IdEntidade, string TipoBloqueio, string AcaoBloqueio)
         {
 
@@ -308,5 +330,75 @@ namespace SistemasdeTarefas.Repository
 
 
         }
+        public IEnumerable<LogBloqueio> LogBloqueio(DateTime? dataInicial = null, DateTime? dataFinal = null)
+        {
+            List<LogBloqueio> alunos = new List<LogBloqueio>();     
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {   
+                connection.Open();
+
+                string query = @"
+                    SELECT TOP 1000 
+                       [IdLogCartao],
+                       [IdCartaoAcesso],
+                       [Codigo],
+                       [IsAluno],
+                       [IdEntidade],
+                       [NumInterno],
+                       [NomeEntidade],
+                       [IsExterno],
+                       [DataRegisto],
+                       [HoraRegisto],
+                       [TipoBloqueio],
+                       [AcaoBloqueio]
+                    FROM [LogBloqueioCartoes]";
+
+                List<string> filtros = new List<string>();
+                if (dataInicial.HasValue)
+                    filtros.Add("DataRegisto >= @DataInicial");
+                if (dataFinal.HasValue)
+                    filtros.Add("DataRegisto <= @DataFinal");
+
+                if (filtros.Count > 0)
+                    query += " WHERE " + string.Join(" AND ", filtros);
+
+                query += " ORDER BY DataRegisto DESC";
+
+                using (SqlCommand cmd = new SqlCommand(query, connection))
+                {
+
+                    if (dataInicial.HasValue)
+                        cmd.Parameters.AddWithValue("@DataInicial", dataInicial.Value);
+                    if (dataFinal.HasValue)
+                        cmd.Parameters.AddWithValue("@DataFinal", dataFinal.Value);
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            LogBloqueio aluno = new LogBloqueio
+                            {
+                                IdLogCartao = reader.GetInt32(0),
+                                IsAluno = reader.GetBoolean(3),
+                                IdCartaoAcesso = reader.GetInt32(1),
+                                Codigo = reader.GetString(2),
+                                DataRegisto = reader.GetDateTime(8),
+                                NomeEntidade = reader.GetString(6),
+                                IsExterno = reader.GetBoolean(7),
+                                TipoBloqueio = reader.GetString(10),
+                                AcaoBloqueio = reader.GetString(11),
+                            };
+
+                            alunos.Add(aluno);
+                        }
+                    }
+                }
+            }
+
+            return alunos;
+        }
+
+
     }
 }
