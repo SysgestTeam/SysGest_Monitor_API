@@ -17,6 +17,7 @@ namespace SistemasdeTarefas
             builder.Services.AddControllers();
 
             // Registre a dependencia IAlunoRepository e AlunoRepository.
+
             builder.Services.AddScoped<IAlunoRepository, AlunoRepository>();
             builder.Services.AddScoped<IExistenciaCardRepository, ExistenciaCardRepository>();
             builder.Services.AddScoped<ICartaoRepository, CartaoRepository>();
