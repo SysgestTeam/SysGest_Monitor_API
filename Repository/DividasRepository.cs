@@ -15,7 +15,7 @@ namespace SistemasdeTarefas.Repository
         }
         public void BloqueioCartao(int[] numAluno = null, bool emMassa = false)
         {
-            if (numAluno == null && !emMassa)            {
+            if (numAluno == null && !emMassa){
                 throw new ArgumentException("A lista de alunos não pode ser nula, a menos que seja um bloqueio em massa.");
             }
 
@@ -102,7 +102,7 @@ namespace SistemasdeTarefas.Repository
 
                             transaction.Commit();
                         }
-                        catch (Exception ex)
+                         catch (Exception ex)
                         {
                             transaction.Rollback();
                             throw new ApplicationException("Erro ao bloquear os cartões. Operação revertida.", ex);
