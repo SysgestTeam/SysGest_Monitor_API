@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
 
-[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class AlunoController : ControllerBase
@@ -15,6 +14,14 @@ public class AlunoController : ControllerBase
     {
         _logger = logger;
         _alunoRepository = alunoRepository;
+    }
+
+    [Authorize]
+    [HttpGet("GetTodosAlunos")]
+    public IEnumerable<Student> GetAllStudents()
+    {
+        var alunos = _alunoRepository.GetAllStudents();
+        return alunos;
     }
 
     [HttpGet("GetAluno")]

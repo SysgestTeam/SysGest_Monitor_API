@@ -5,7 +5,8 @@ namespace SistemasdeTarefas.Models
             public string Nome { get; set; }
             public int Numero { get; set; }
             public string Profissao { get; set; }
-            public byte[] foto { get; set; }
+            public string EMAIL { get; set; }
+        public byte[] foto { get; set; }
         }
 
 

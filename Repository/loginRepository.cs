@@ -32,7 +32,7 @@ namespace SistemasdeTarefas.Repository
                 issuer: "yourdomain.com",
                 audience: "yourdomain.com",
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(60),
+                expires: DateTime.Now.AddMonths(12),
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);

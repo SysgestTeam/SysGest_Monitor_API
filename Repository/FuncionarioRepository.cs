@@ -23,7 +23,7 @@ namespace SistemasdeTarefas.Repository
                 connection.Open();
 
                 // Consulta SQL para buscar as classes
-                string sqlQuery = "SELECT NumInterno,NomeFuncionario, Profissao, Foto FROM Funcionario WHERE INACTIVO = 0";
+                string sqlQuery = "SELECT NumInterno,NomeFuncionario, Profissao, Foto, EMAIL FROM Funcionario WHERE INACTIVO = 0";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
                 {
@@ -36,6 +36,7 @@ namespace SistemasdeTarefas.Repository
                                 Numero = reader.GetInt32(0),
                                 Nome = reader.GetString(1),
                                 Profissao = reader.GetString(2),
+                                EMAIL = reader.GetString(4),
                                 foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) // Verifica se a coluna é DBNull
                             };
                             if (reader["foto"] != DBNull.Value)

@@ -40,22 +40,23 @@ public class DevedorController : ControllerBase
 
     [HttpPost("bloqueio-cartao")]
     [EnableCors("AllowAll")]
-    public void BloqueioEmMassa(int[] numAluno, bool emMassa = false)
+    public IActionResult BloqueioEmMassa(int[] numAluno, bool emMassa = false)
     {
         try
         {
-            _DividasRepository.BloqueioCartao(numAluno, emMassa);
-            Ok();
+            int linhasAfetadas = _DividasRepository.BloqueioCartao(numAluno, emMassa);
+            return Ok(new { mensagem = "Bloqueio realizado com sucesso.", totalLinhasAfetadas = linhasAfetadas });
         }
         catch (ApplicationException ex)
         {
-            BadRequest(new { mensagem = ex.Message });
+            return BadRequest(new { mensagem = ex.Message });
         }
         catch (Exception ex)
         {
-             StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
         }
     }
+
 
 
     [HttpPost("desbloqueio-cartao")]
@@ -79,20 +80,20 @@ public class DevedorController : ControllerBase
 
     [HttpPost("bloqueio-cartao-por-mes")]
     [EnableCors("AllowAll")]
-    public void BloquearDevedoresPorMes(DateTime dataInicial, DateTime dataFinal, int numeroMeses)
+    public IActionResult BloquearDevedoresPorMes(DateTime dataInicial, DateTime dataFinal)
     {
         try
         {
-            _DividasRepository.BloquearDevedoresPorMes(dataInicial,dataFinal, numeroMeses);
-            Ok();
+            int linhasAfetadas = _DividasRepository.BloquearDevedoresPorMes(dataInicial, dataFinal);
+            return Ok(new { mensagem = "Bloqueio realizado com sucesso.", totalLinhasAfetadas = linhasAfetadas });
         }
         catch (ApplicationException ex)
         {
-            BadRequest(new { mensagem = ex.Message });
+            return BadRequest(new { mensagem = ex.Message });
         }
         catch (Exception ex)
         {
-            StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
         }
     }
 

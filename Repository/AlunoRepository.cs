@@ -14,6 +14,82 @@ namespace SistemasdeTarefas.Repository
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
+        public IEnumerable<Student> GetAllStudents()
+        {
+            List<Student> students = new List<Student>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                string sqlQuery = @$"SELECT TABALUNOS.NUMALUNO  AS User_id, 
+	                    CINUMERO UserName,
+	                    TABALUNOS.NOME Full_name,
+	                    EMAIL ,
+	                    FOTO user_photo,
+	                    BAIRRO neighborhood,
+	                    MORADA address,
+	                    MUNICIPIO municipality,
+	                    COMUNA commune,
+	                    DATANASC date_of_birth,
+	                    OIEMAILMAE mother_email,
+	                    OINOMEMAE mother_name,
+	                    OITELFMAE mother_phone,
+	                    OIEMAILPAI father_email,
+	                    OINOMEPAI father_name,
+	                    OITELFPAI father_phone,
+	                    TABTURMAS.NOME class,
+	                    CartaoAluno.Bloqueado is_blocked,
+	                    TABSTATUS.NOME status
+                    FROM TABALUNOS
+	                    JOIN TABMATRICULAS
+                    ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO
+	                    JOIN TABTURMAS
+                    ON TABTURMAS.IDTURMA =  TABMATRICULAS.IDTURMA
+	                    LEFT JOIN CartaoAluno
+                    ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
+	                    JOIN TABSTATUS
+                    ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
+                    WHERE TABMATRICULAS.IDANOLECTIVO = (SELECT MAX(IDANO) FROM TABANOSLECTIVOS)
+                    ORDER BY TABALUNOS.NUMALUNO ASC";
+
+                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Student student = new Student
+                            {
+                                UserId = reader.IsDBNull(reader.GetOrdinal("User_id")) ? 0 : reader.GetInt32(reader.GetOrdinal("User_id")),
+                                UserName = reader.IsDBNull(reader.GetOrdinal("UserName")) ? string.Empty : reader.GetString(reader.GetOrdinal("UserName")),
+                                FullName = reader.IsDBNull(reader.GetOrdinal("Full_name")) ? string.Empty : reader.GetString(reader.GetOrdinal("Full_name")),
+                                Email = reader.IsDBNull(reader.GetOrdinal("EMAIL")) ? null : reader.GetString(reader.GetOrdinal("EMAIL")),
+                                UserPhoto = reader.IsDBNull(reader.GetOrdinal("user_photo")) ? null : (byte[])reader["user_photo"],
+                                Neighborhood = reader.IsDBNull(reader.GetOrdinal("neighborhood")) ? null : reader.GetString(reader.GetOrdinal("neighborhood")),
+                                Address = reader.IsDBNull(reader.GetOrdinal("address")) ? null : reader.GetString(reader.GetOrdinal("address")),
+                                Municipality = reader.IsDBNull(reader.GetOrdinal("municipality")) ? null : reader.GetString(reader.GetOrdinal("municipality")),
+                                Commune = reader.IsDBNull(reader.GetOrdinal("commune")) ? null : reader.GetString(reader.GetOrdinal("commune")),
+                                DateOfBirth = (DateTime)(reader.IsDBNull(reader.GetOrdinal("date_of_birth")) ? (DateTime?)null : reader.GetDateTime(reader.GetOrdinal("date_of_birth"))),
+                                MotherEmail = reader.IsDBNull(reader.GetOrdinal("mother_email")) ? null : reader.GetString(reader.GetOrdinal("mother_email")),
+                                MotherName = reader.IsDBNull(reader.GetOrdinal("mother_name")) ? null : reader.GetString(reader.GetOrdinal("mother_name")),
+                                MotherPhone = reader.IsDBNull(reader.GetOrdinal("mother_phone")) ? null : reader.GetString(reader.GetOrdinal("mother_phone")),
+                                FatherEmail = reader.IsDBNull(reader.GetOrdinal("father_email")) ? null : reader.GetString(reader.GetOrdinal("father_email")),
+                                FatherName = reader.IsDBNull(reader.GetOrdinal("father_name")) ? null : reader.GetString(reader.GetOrdinal("father_name")),
+                                FatherPhone = reader.IsDBNull(reader.GetOrdinal("father_phone")) ? null : reader.GetString(reader.GetOrdinal("father_phone")),
+                                Class = reader.IsDBNull(reader.GetOrdinal("class")) ? string.Empty : reader.GetString(reader.GetOrdinal("class")),
+                                IsBlocked = !reader.IsDBNull(reader.GetOrdinal("is_blocked")) && reader.GetBoolean(reader.GetOrdinal("is_blocked")),
+                                status = reader.IsDBNull(reader.GetOrdinal("status")) ? null : reader.GetString(reader.GetOrdinal("status"))
+                            };
+
+                            students.Add(student);
+                        }
+                    }
+                }
+            }
+
+            return students;
+        }
         public IEnumerable<TabAluno> GetAlunos()
         {
             List<TabAluno> alunos = new List<TabAluno>();
@@ -49,8 +125,6 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-
-
         public IEnumerable<TabAluno> GetAlunosFiltro(int? idclasse = null, int? idturma = null)
         {
             List<TabAluno> alunos = new List<TabAluno>();

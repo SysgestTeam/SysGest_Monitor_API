@@ -13,11 +13,14 @@ namespace SistemasdeTarefas.Repository
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
-        public void BloqueioCartao(int[] numAluno = null, bool emMassa = false)
+        public int BloqueioCartao(int[] numAluno = null, bool emMassa = false)
         {
-            if (numAluno == null && !emMassa){
+            if (numAluno == null && !emMassa)
+            {
                 throw new ArgumentException("A lista de alunos não pode ser nula, a menos que seja um bloqueio em massa.");
             }
+
+            int totalLinhasAfetadas = 0;
 
             try
             {
@@ -45,7 +48,7 @@ namespace SistemasdeTarefas.Repository
                                 using (SqlCommand cmd = new SqlCommand(queryEmMassa, connection, transaction))
                                 {
                                     cmd.Parameters.AddWithValue("@idAno", idAno);
-                                    cmd.ExecuteNonQuery();
+                                    totalLinhasAfetadas += cmd.ExecuteNonQuery();
                                 }
 
                                 // Chamada da Stored Procedure para o log
@@ -81,7 +84,7 @@ namespace SistemasdeTarefas.Repository
                                         {
                                             cmd.Parameters.AddWithValue($"@aluno{j}", chunk[j]);
                                         }
-                                        cmd.ExecuteNonQuery();
+                                        totalLinhasAfetadas += cmd.ExecuteNonQuery();
                                     }
 
                                     // Inserção dos logs para cada aluno
@@ -101,8 +104,9 @@ namespace SistemasdeTarefas.Repository
                             }
 
                             transaction.Commit();
+                            return totalLinhasAfetadas;
                         }
-                         catch (Exception ex)
+                        catch (Exception ex)
                         {
                             transaction.Rollback();
                             throw new ApplicationException("Erro ao bloquear os cartões. Operação revertida.", ex);
@@ -124,7 +128,8 @@ namespace SistemasdeTarefas.Repository
                 throw new ApplicationException("Erro ao bloquear os cartões.", ex);
             }
         }
-        public void BloquearDevedoresPorMes(DateTime dataInicial, DateTime dataFinal, int numeroMeses)
+
+        public int BloquearDevedoresPorMes(DateTime dataInicial, DateTime dataFinal)
         {
             List<int> alunosDevedores = new List<int>();
 
@@ -132,18 +137,17 @@ namespace SistemasdeTarefas.Repository
             {
                 connection.Open();
 
-                using (SqlCommand cmd = new SqlCommand("SP_DEVEDORES_MES", connection))
+                using (SqlCommand cmd = new SqlCommand("SP_DEVEDORES", connection))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(new SqlParameter("@DATAINI", SqlDbType.DateTime) { Value = dataInicial });
                     cmd.Parameters.Add(new SqlParameter("@DATAFIM", SqlDbType.DateTime) { Value = dataFinal });
-                    cmd.Parameters.Add(new SqlParameter("@NUM_MESES", SqlDbType.Int) { Value = numeroMeses });
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            alunosDevedores.Add(reader.GetInt32(1)); // Supondo que a primeira coluna seja NumAluno
+                            alunosDevedores.Add(reader.GetInt32(4)); // Supondo que a primeira coluna seja NumAluno
                         }
                     }
                 }
@@ -151,8 +155,10 @@ namespace SistemasdeTarefas.Repository
 
             if (alunosDevedores.Any())
             {
-                BloqueioCartao(alunosDevedores.ToArray(), false);
+                 return BloqueioCartao(alunosDevedores.ToArray(), false);
             }
+
+            return 0;
         }
         public IEnumerable<Devedor> GetDevedores(DateTime? dataInicial = null, DateTime? dataFinal = null)
         {
@@ -339,7 +345,7 @@ namespace SistemasdeTarefas.Repository
                 connection.Open();
 
                 string query = @"
-                    SELECT TOP 1000 
+                    SELECT TOP 2000 
                        [IdLogCartao],
                        [IdCartaoAcesso],
                        [Codigo],
@@ -353,6 +359,7 @@ namespace SistemasdeTarefas.Repository
                        [TipoBloqueio],
                        [AcaoBloqueio]
                     FROM [LogBloqueioCartoes]";
+                    
 
                 List<string> filtros = new List<string>();
                 if (dataInicial.HasValue)
@@ -381,13 +388,12 @@ namespace SistemasdeTarefas.Repository
                             {
                                 IdLogCartao = reader.GetInt32(0),
                                 IsAluno = reader.GetBoolean(3),
-                                IdCartaoAcesso = reader.GetInt32(1),
-                                Codigo = reader.GetString(2),
-                                DataRegisto = reader.GetDateTime(8),
-                                NomeEntidade = reader.GetString(6),
+                                Codigo = reader.IsDBNull(2) ? null : reader.GetString(2),
+                                NomeEntidade = reader.IsDBNull(6) ? null : reader.GetString(6),
                                 IsExterno = reader.GetBoolean(7),
-                                TipoBloqueio = reader.GetString(10),
-                                AcaoBloqueio = reader.GetString(11),
+                                DataRegisto =  reader.GetDateTime(8),
+                                TipoBloqueio = reader.IsDBNull(10) ? null : reader.GetString(10),
+                                AcaoBloqueio = reader.IsDBNull(11) ? null : reader.GetString(11)
                             };
 
                             alunos.Add(aluno);
