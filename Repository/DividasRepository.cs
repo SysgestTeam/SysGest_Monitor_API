@@ -144,7 +144,7 @@ namespace SistemasdeTarefas.Repository
                     cmd.Parameters.Add(new SqlParameter("@DATAFIM", SqlDbType.DateTime) { Value = dataFinal });
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
-                    {
+                    { 
                         while (reader.Read())
                         {
                             alunosDevedores.Add(reader.GetInt32(4)); // Supondo que a primeira coluna seja NumAluno
@@ -405,6 +405,81 @@ namespace SistemasdeTarefas.Repository
             return alunos;
         }
 
+        public void NaoOUBloqueioCartao(int[] numAluno = null, int tipo = 1)
+        {
+           if (numAluno == null)
+            {
+                throw new ArgumentException("A lista de alunos não pode ser nula");
+            }
 
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                {
+                    connection.Open();
+
+                    string anoQuery = "SELECT MAX(IDANO) FROM TABANOSLECTIVOS";
+                    int idAno;
+                    using (SqlCommand anoCmd = new SqlCommand(anoQuery, connection))
+                    {
+                        idAno = (int)anoCmd.ExecuteScalar();
+                    }
+
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        try
+                        {
+                                if (numAluno.Length == 0)
+                                {
+                                    throw new ArgumentException("A lista de alunos não pode estar vazia.");
+                                }
+
+                                int chunkSize = 500;
+                                for (int i = 0; i < numAluno.Length; i += chunkSize)
+                                {
+                                    var chunk = numAluno.Skip(i).Take(chunkSize);
+                                    string alunoList = string.Join(",", chunk);
+
+                                    if (string.IsNullOrEmpty(alunoList))
+                                        continue;
+
+                                    string query = @$"
+                                    UPDATE CartaoAluno 
+                                    SET NaoBloqueavel = {tipo} 
+                                    WHERE NumAluno IN ({alunoList}) AND IdAno = @idAno";
+
+                                    using (SqlCommand cmd = new SqlCommand(query, connection, transaction))
+                                    {
+                                        cmd.Parameters.AddWithValue("@idAno", idAno);
+                                        cmd.ExecuteNonQuery();
+                                    }
+                            }
+
+                            // Commit da transação
+                            transaction.Commit();
+                        }
+                        catch (Exception ex)
+                        {
+                            // Caso haja erro, faz o rollback
+                            transaction.Rollback();
+                            throw new ApplicationException("Erro ao bloquear os cartões. Operação revertida.", ex);
+                        }
+                    }
+                }
+            }
+            catch (SqlException sqlEx)
+            {
+                var errorMessage = "Erro ao executar o bloqueio dos cartões. Detalhes do erro SQL:";
+                foreach (SqlError error in sqlEx.Errors)
+                {
+                    errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
+                }
+                throw new ApplicationException(errorMessage, sqlEx);
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("Erro ao bloquear os cartões.", ex);
+            }
+        }
     }
 }

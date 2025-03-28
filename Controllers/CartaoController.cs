@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
@@ -7,6 +8,7 @@ namespace SistemasdeTarefas.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableCors("AllowAll")]
     public class CartaoController : ControllerBase
     {
         private readonly ICartaoRepository _cartaoRepository;

@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
 
 [ApiController]
 [Route("api/[controller]")]
+[EnableCors("AllowAll")]
 public class RelatorioController : ControllerBase
 {
     private readonly ILogger<RelatorioController> _logger;

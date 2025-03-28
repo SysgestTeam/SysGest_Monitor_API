@@ -8,13 +8,64 @@ namespace SistemasdeTarefas.Repository
     public class AlunoRepository : IAlunoRepository
     {
         private readonly string _connectionString;
-
         public AlunoRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        public IEnumerable<Student> GetAllStudents()
+        public IEnumerable<Class> GetAllClass(int ano)
+        {
+            var classesDict = new Dictionary<int, Class>();
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                string query = @"
+        SELECT TABCLASSES.IDCLASSE AS Class_id,
+               TABCLASSES.NOME AS Class, 
+               TABTURMAS.NOME AS batch, 
+               TABTURMAS.IDTURMA AS batch_id  
+        FROM TABCLASSES
+        JOIN TABTURMAS ON TABCLASSES.IDCLASSE = TABTURMAS.IDCLASSE
+        WHERE TABCLASSES.IDANO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = @Ano)";
+
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Ano", ano);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int classId = reader.GetInt32(reader.GetOrdinal("Class_id"));
+
+                            // Verifica se a classe já existe no dicionário
+                            if (!classesDict.TryGetValue(classId, out var classObj))
+                            {
+                                classObj = new Class
+                                {
+                                    id = classId,
+                                    name = reader.GetString(reader.GetOrdinal("Class")),
+                                    batche = new List<batch>() // Inicializa a lista de turmas
+                                };
+
+                                classesDict[classId] = classObj;
+                            }
+
+                            // Adiciona o batch à lista da classe
+                            classObj.batche.Add(new batch
+                            {
+                                id = reader.GetInt32(reader.GetOrdinal("batch_id")),
+                                name = reader.GetString(reader.GetOrdinal("batch"))
+                            });
+                        }
+                    }
+                }
+            }
+
+            return classesDict.Values;
+        }
+        public IEnumerable<Student> GetAllStudents(int ano)
         {
             List<Student> students = new List<Student>();
 
@@ -22,36 +73,48 @@ namespace SistemasdeTarefas.Repository
             {
                 connection.Open();
 
-                string sqlQuery = @$"SELECT TABALUNOS.NUMALUNO  AS User_id, 
-	                    CINUMERO UserName,
-	                    TABALUNOS.NOME Full_name,
-	                    EMAIL ,
-	                    FOTO user_photo,
-	                    BAIRRO neighborhood,
-	                    MORADA address,
-	                    MUNICIPIO municipality,
-	                    COMUNA commune,
-	                    DATANASC date_of_birth,
-	                    OIEMAILMAE mother_email,
-	                    OINOMEMAE mother_name,
-	                    OITELFMAE mother_phone,
-	                    OIEMAILPAI father_email,
-	                    OINOMEPAI father_name,
-	                    OITELFPAI father_phone,
-	                    TABTURMAS.NOME class,
-	                    CartaoAluno.Bloqueado is_blocked,
-	                    TABSTATUS.NOME status
-                    FROM TABALUNOS
-	                    JOIN TABMATRICULAS
-                    ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO
-	                    JOIN TABTURMAS
-                    ON TABTURMAS.IDTURMA =  TABMATRICULAS.IDTURMA
-	                    LEFT JOIN CartaoAluno
-                    ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
-	                    JOIN TABSTATUS
-                    ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
-                    WHERE TABMATRICULAS.IDANOLECTIVO = (SELECT MAX(IDANO) FROM TABANOSLECTIVOS)
-                    ORDER BY TABALUNOS.NUMALUNO ASC";
+                string sqlQuery = @$"		SELECT 
+		TABALUNOS.NUMALUNO  AS User_id, 
+		CINUMERO UserName,
+		TABALUNOS.NOME Full_name,
+        LEFT(TABALUNOS.NOME, CHARINDEX(' ', TABALUNOS.NOME + ' ') - 1) AS first_name,
+	    RIGHT(TABALUNOS.NOME, CHARINDEX(' ', REVERSE(TABALUNOS.NOME)) - 1) AS last_name,
+		EMAIL ,
+		CASE 
+        WHEN SEXO = 1 THEN 'Masculine' 
+        WHEN SEXO = 0 THEN 'Feminine' 
+        ELSE 'Not informed' 
+    END AS gender,
+		FOTO user_photo,
+		BAIRRO neighborhood,
+		MORADA address,
+		MUNICIPIO municipality,
+		COMUNA commune,
+		DATANASC date_of_birth,
+		OIEMAILMAE mother_email,
+		OINOMEMAE mother_name,
+		OITELFMAE mother_phone,
+		OIEMAILPAI father_email,
+		OINOMEPAI father_name,
+		OITELFPAI father_phone,
+		TABCLASSES.NOME class,
+		TABTURMAS.IDTURMA batch_id,
+		TABTURMAS.NOME batch,
+		CartaoAluno.Bloqueado is_blocked,
+		TABSTATUS.NOME status
+		FROM TABALUNOS
+			JOIN TABMATRICULAS
+		ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO
+			JOIN TABTURMAS
+		ON TABTURMAS.IDTURMA =  TABMATRICULAS.IDTURMA
+			LEFT JOIN CartaoAluno
+		ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
+			JOIN TABSTATUS
+		ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
+			JOIN  TABCLASSES
+		 ON TABCLASSES.IDCLASSE =  TABTURMAS.IDCLASSE
+			WHERE TABMATRICULAS.IDANOLECTIVO =(SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = 2025)
+		ORDER BY TABALUNOS.NUMALUNO ASC";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
                 {
@@ -63,7 +126,10 @@ namespace SistemasdeTarefas.Repository
                             {
                                 UserId = reader.IsDBNull(reader.GetOrdinal("User_id")) ? 0 : reader.GetInt32(reader.GetOrdinal("User_id")),
                                 UserName = reader.IsDBNull(reader.GetOrdinal("UserName")) ? string.Empty : reader.GetString(reader.GetOrdinal("UserName")),
+                                gender = reader.IsDBNull(reader.GetOrdinal("gender")) ? string.Empty : reader.GetString(reader.GetOrdinal("gender")),
                                 FullName = reader.IsDBNull(reader.GetOrdinal("Full_name")) ? string.Empty : reader.GetString(reader.GetOrdinal("Full_name")),
+                                first_name = reader.IsDBNull(reader.GetOrdinal("first_name")) ? string.Empty : reader.GetString(reader.GetOrdinal("first_name")),
+                                last_name = reader.IsDBNull(reader.GetOrdinal("last_name")) ? string.Empty : reader.GetString(reader.GetOrdinal("last_name")),
                                 Email = reader.IsDBNull(reader.GetOrdinal("EMAIL")) ? null : reader.GetString(reader.GetOrdinal("EMAIL")),
                                 UserPhoto = reader.IsDBNull(reader.GetOrdinal("user_photo")) ? null : (byte[])reader["user_photo"],
                                 Neighborhood = reader.IsDBNull(reader.GetOrdinal("neighborhood")) ? null : reader.GetString(reader.GetOrdinal("neighborhood")),
@@ -78,7 +144,9 @@ namespace SistemasdeTarefas.Repository
                                 FatherName = reader.IsDBNull(reader.GetOrdinal("father_name")) ? null : reader.GetString(reader.GetOrdinal("father_name")),
                                 FatherPhone = reader.IsDBNull(reader.GetOrdinal("father_phone")) ? null : reader.GetString(reader.GetOrdinal("father_phone")),
                                 Class = reader.IsDBNull(reader.GetOrdinal("class")) ? string.Empty : reader.GetString(reader.GetOrdinal("class")),
-                                IsBlocked = !reader.IsDBNull(reader.GetOrdinal("is_blocked")) && reader.GetBoolean(reader.GetOrdinal("is_blocked")),
+                         IsBlocked = reader.IsDBNull(reader.GetOrdinal("is_blocked"))? (bool?)null: reader.GetBoolean(reader.GetOrdinal("is_blocked")),
+                                batch_id = reader.IsDBNull(reader.GetOrdinal("batch_id")) ? 0 : reader.GetInt32(reader.GetOrdinal("batch_id")),
+                                batch = reader.IsDBNull(reader.GetOrdinal("batch")) ? string.Empty : reader.GetString(reader.GetOrdinal("batch")),
                                 status = reader.IsDBNull(reader.GetOrdinal("status")) ? null : reader.GetString(reader.GetOrdinal("status"))
                             };
 

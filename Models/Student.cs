@@ -4,6 +4,9 @@
     {
         public int UserId { get; set; }
         public string UserName { get; set; }
+        public string gender { get; set; }
+        public string first_name { get; set; }
+        public string last_name { get; set; }
         public string FullName { get; set; }
         public string Email { get; set; }
         public byte[] UserPhoto { get; set; }
@@ -19,7 +22,9 @@
         public string FatherName { get; set; }
         public string FatherPhone { get; set; }
         public string Class { get; set; }
-        public bool IsBlocked { get; set; }
+        public int batch_id { get; set; }
+        public string batch { get; set; }
+        public bool? IsBlocked { get; set; }
         public string status { get; set; }
     }
 

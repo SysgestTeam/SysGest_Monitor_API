@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
@@ -7,6 +8,7 @@ namespace SistemasdeTarefas.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [EnableCors("AllowAll")]
     public class ExistenciaController : ControllerBase
     {
         private readonly IExistenciaCardRepository _existenciaCardRepository;

@@ -10,5 +10,6 @@ namespace SistemasdeTarefas.Interface
         public void LogBloqueio( int IsAluno , int IdEntidade ,string TipoBloqueio,string AcaoBloqueio);
         public int BloqueioCartao(int[] numAluno = null, bool emMassa = false);
         public void DesbloqueioCartao(int[] numAluno = null);
+        public void NaoOUBloqueioCartao(int[] numAluno = null, int tipo = 1);
     }
 }

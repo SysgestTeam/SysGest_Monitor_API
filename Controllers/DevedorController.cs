@@ -58,6 +58,26 @@ public class DevedorController : ControllerBase
     }
 
 
+    [HttpPost("nao-ou-bloqueio-cartao")]
+    [EnableCors("AllowAll")]
+    public IActionResult NaoOuBloqueioEmMassa(int[] numAluno = null, int tipo = 1)
+    {
+        try
+        {
+            _DividasRepository.NaoOUBloqueioCartao(numAluno,tipo);
+            return Ok(new { mensagem = "Operação realizado com sucesso."});
+        }
+        catch (ApplicationException ex)
+        {
+            return BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
+
+
 
     [HttpPost("desbloqueio-cartao")]
     [EnableCors("AllowAll")]

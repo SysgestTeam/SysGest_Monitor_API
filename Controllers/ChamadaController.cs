@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using SistemasdeTarefas.Models;
@@ -8,6 +9,7 @@ namespace SistemasdeTarefas.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableCors("AllowAll")]
     public class ChamadaController : ControllerBase
     {
         private readonly string _connectionString; // Conexão com o banco de dados

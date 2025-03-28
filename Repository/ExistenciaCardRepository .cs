@@ -301,6 +301,7 @@ namespace SistemasdeTarefas.Repository
                                 NomeTurma = reader.GetString(8),
                                 CodigoCartao = reader.GetString(10),
                                 Bloqueado = reader.GetBoolean(12),
+                                NaoBloqueavel = reader.IsDBNull(24) ? (bool?)null : reader.GetBoolean(24),
                             };
 
                             inexistenciaCards.Add(card);

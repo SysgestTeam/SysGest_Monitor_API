@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
 
 [ApiController]
 [Route("api/[controller]")]
+
+[EnableCors("AllowAll")]
 public class AlunoController : ControllerBase
 {
     private readonly ILogger<AlunoController> _logger;
@@ -16,11 +19,18 @@ public class AlunoController : ControllerBase
         _alunoRepository = alunoRepository;
     }
 
-    [Authorize]
+    
     [HttpGet("GetTodosAlunos")]
-    public IEnumerable<Student> GetAllStudents()
+    public IEnumerable<Student> GetAllStudents(int ano)
     {
-        var alunos = _alunoRepository.GetAllStudents();
+        var alunos = _alunoRepository.GetAllStudents(ano);
+        return alunos;
+    }
+
+    [HttpGet("courses")]
+    public IEnumerable<Class> courses(int ano)
+    {
+        var alunos = _alunoRepository.GetAllClass(ano);
         return alunos;
     }
 
