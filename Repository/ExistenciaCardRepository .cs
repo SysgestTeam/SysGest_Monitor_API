@@ -192,7 +192,6 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-
         public IEnumerable<Existencia_Card> GetInexistenciaCardBloqueadoFiltro(int? idclasse = null, int? idturma = null)
         {
             List<Existencia_Card> alunos = new List<Existencia_Card>();
@@ -296,13 +295,14 @@ namespace SistemasdeTarefas.Repository
                         {
                             Existencia_Card card = new Existencia_Card
                             {
-                                NumAluno = reader.GetInt32(2), 
-                                Nome = reader.GetString(3),
-                                NomeTurma = reader.GetString(8),
-                                CodigoCartao = reader.GetString(10),
-                                Bloqueado = reader.GetBoolean(12),
+                                NumAluno = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
+                                Nome = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                                NomeTurma = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
+                                CodigoCartao = reader.IsDBNull(10) ? string.Empty : reader.GetString(10),
+                                Bloqueado = reader.IsDBNull(12) ? false : reader.GetBoolean(12),
                                 NaoBloqueavel = reader.IsDBNull(24) ? (bool?)null : reader.GetBoolean(24),
                             };
+
 
                             inexistenciaCards.Add(card);
                         }

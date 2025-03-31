@@ -67,19 +67,17 @@ namespace SistemasdeTarefas
             {
                 options.AddPolicy("AllowSpecificOrigin", policy =>
                 {
-                    policy.WithOrigins(allowedOrigins) // Use os valores do appsettings.json
+                    policy.WithOrigins(allowedOrigins) 
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
             });
 
 
-            // Configuração do Swagger
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "API MONITOR", Version = "v1" });
 
-                // Configuração de autenticação via JWT Bearer
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
@@ -90,7 +88,6 @@ namespace SistemasdeTarefas
                     Description = "Insira o token JWT no formato: Bearer {seu token}"
                 });
 
-                // Adiciona o parâmetro de cabeçalho de autorização globalmente
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
