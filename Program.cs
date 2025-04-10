@@ -4,6 +4,8 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using static SistemasdeTarefas.Repository.DividasRepository;
+using Microsoft.AspNetCore.Mvc;
 
 namespace SistemasdeTarefas
 {
@@ -27,6 +29,13 @@ namespace SistemasdeTarefas
             builder.Services.AddScoped<IloginRepository, loginRepository>();
             builder.Services.AddScoped<ISaldoConsumo, SaldoConsumoRepository>();
             builder.Services.AddScoped<IDividasRepository, DividasRepository>();
+
+            builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
+            });
+
             var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 
 

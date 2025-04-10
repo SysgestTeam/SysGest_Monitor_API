@@ -2,6 +2,8 @@
 using SistemasdeTarefas.Models;
 using System.Data;
 using System.Data.SqlClient;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace SistemasdeTarefas.Repository
 {
@@ -128,7 +130,6 @@ namespace SistemasdeTarefas.Repository
                 throw new ApplicationException("Erro ao bloquear os cartões.", ex);
             }
         }
-
         public int BloquearDevedoresPorMes(DateTime dataInicial, DateTime dataFinal)
         {
             List<int> alunosDevedores = new List<int>();
@@ -404,7 +405,6 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-
         public void NaoOUBloqueioCartao(int[] numAluno = null, int tipo = 1)
         {
            if (numAluno == null)
@@ -481,5 +481,135 @@ namespace SistemasdeTarefas.Repository
                 throw new ApplicationException("Erro ao bloquear os cartões.", ex);
             }
         }
+        public IEnumerable<Devedor> GetDevedorPorAluno(int numAluno)
+        {
+            List<Devedor> alunos = new List<Devedor>();
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                string query = @$"
+                select adl.pago, adl.NomeContrato, DataLimite, ValorEmissao, ValorPago, DataPag, 
+		                RefMultiCx = (SELECT ci.RefMultiCx FROM CustomerInvoice ci WHERE ci.Id = adl.IdLinFactura)
+                            FROM AlunoDossier ad INNER JOIN AlunoDossierLin adl ON ad.IdAlunoDossier = adl.IdAlunoDossier
+                          WHERE ad.NumAluno = {numAluno} AND ad.Deleted = 0 and adl.Deleted = 0 
+		                  and adl.Inactivo = 0 and adl.Anulado = 0  And adl.Pago = 0";
+                // Chame o procedimento armazenado
+                using (SqlCommand cmd = new SqlCommand(query, connection))
+                {
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Devedor aluno = new Devedor
+                            {
+                                Contrato = reader.GetString(1),
+                                DataLimite = reader.GetDateTime(2),
+                                Valor = reader.GetDecimal(3)
+                            };
+
+                            alunos.Add(aluno);
+                        }
+                    }
+                }
+            }
+
+            return alunos;
+        }
+        public void CriarOuAtualizarConfigBloqueio(bool APLICAR_MULTA, int DIA_MULTA, TimeOnly HORA_BLOQUEIO, int NUMERO_MESES_DIVIDA)
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    using (SqlTransaction transaction = connection.BeginTransaction())
+                    {
+
+                    
+
+                        try
+                        {
+                            // Cria o comando para a stored procedure
+                            using (SqlCommand cmd = new SqlCommand("sp_CriarOuAtualizarConfigBloqueio", connection, transaction))
+                            {
+                                cmd.CommandType = CommandType.StoredProcedure;
+
+                                // Adiciona os parâmetros para a stored procedure
+                                cmd.Parameters.Add(new SqlParameter("@APLICAR_MULTA", SqlDbType.Bit) { Value = APLICAR_MULTA });
+                                cmd.Parameters.Add(new SqlParameter("@DIA_MULTA", SqlDbType.TinyInt) { Value = DIA_MULTA });
+                                cmd.Parameters.Add(new SqlParameter("@HORA_BLOQUEIO", SqlDbType.Time) { Value = HORA_BLOQUEIO.ToTimeSpan() });
+                                cmd.Parameters.Add(new SqlParameter("@NUMERO_MESES_DIVIDA", SqlDbType.TinyInt) { Value = NUMERO_MESES_DIVIDA });
+
+                                // Executa a stored procedure
+                                cmd.ExecuteNonQuery();
+                            }
+
+                            // Se tudo ocorrer bem, faz o commit da transação
+                            transaction.Commit();
+                        }
+                        catch (SqlException sqlEx)
+                        {
+                            // Caso ocorra erro, faz o rollback da transação
+                            transaction.Rollback();
+
+                            // Cria a mensagem de erro detalhada
+                            var errorMessage = "Erro ao criar ou atualizar a configuração de bloqueio.";
+                            foreach (SqlError error in sqlEx.Errors)
+                            {
+                                errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
+                            }
+
+                            // Lança uma exceção com os detalhes do erro
+                            throw new ApplicationException(errorMessage, sqlEx);
+                        }
+                    }
+                }
+            }
+        public class TimeOnlyJsonConverter : JsonConverter<TimeOnly>
+        {
+            public override TimeOnly Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                return TimeOnly.Parse(reader.GetString()!);
+            }
+
+            public override void Write(Utf8JsonWriter writer, TimeOnly value, JsonSerializerOptions options)
+            {
+                writer.WriteStringValue(value.ToString("HH:mm:ss"));
+            }
+        }
+        public IEnumerable<ConfigBloqueio> ObterTodasConfigBloqueio()
+        {
+            var listaConfig = new List<ConfigBloqueio>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                using (SqlCommand cmd = new SqlCommand("SELECT * FROM TABCONFIGBLOQUEIO WHERE ATIVO = 1", connection))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var config = new ConfigBloqueio
+                            {
+                                IDCONFIGBLOQUEIO = reader.GetInt32(reader.GetOrdinal("IDCONFIGBLOQUEIO")),
+                                APLICAR_MULTA = reader.GetBoolean(reader.GetOrdinal("APLICAR_MULTA")),
+                                DIA_MULTA = reader.GetByte(reader.GetOrdinal("DIA_MULTA")),
+                                HORA_BLOQUEIO = TimeOnly.FromTimeSpan(reader.GetTimeSpan(reader.GetOrdinal("HORA_BLOQUEIO"))),
+                                NUMERO_MESES_DIVIDA = reader.GetByte(reader.GetOrdinal("NUMERO_MESES_DIVIDA")),
+                                ATIVO = reader.GetBoolean(reader.GetOrdinal("ATIVO")),
+                                DATA_CRIACAO = reader.GetDateTime(reader.GetOrdinal("DATA_CRIACAO")),
+                                DATA_ATUALIZACAO = reader.GetDateTime(reader.GetOrdinal("DATA_ATUALIZACAO"))
+                            };
+
+                            listaConfig.Add(config);
+                        }
+                    }
+                }
+            }
+
+            return listaConfig;
+        }
+
     }
 }

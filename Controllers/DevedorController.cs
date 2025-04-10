@@ -4,6 +4,7 @@ using SistemasdeTarefas.Interface;
 
 [ApiController]
 [Route("api/[controller]")]
+[EnableCors("AllowAll")]
 public class DevedorController : ControllerBase
 {
     private readonly ILogger<DevedorController> _logger;
@@ -18,7 +19,6 @@ public class DevedorController : ControllerBase
 
 
     [HttpGet()]
-    [EnableCors("AllowAll")]
     public IActionResult GetDevedores(DateTime? DataInicio = null, DateTime? DataFim = null)
     {
         try
@@ -39,7 +39,6 @@ public class DevedorController : ControllerBase
 
 
     [HttpPost("bloqueio-cartao")]
-    [EnableCors("AllowAll")]
     public IActionResult BloqueioEmMassa(int[] numAluno, bool emMassa = false)
     {
         try
@@ -59,7 +58,6 @@ public class DevedorController : ControllerBase
 
 
     [HttpPost("nao-ou-bloqueio-cartao")]
-    [EnableCors("AllowAll")]
     public IActionResult NaoOuBloqueioEmMassa(int[] numAluno = null, int tipo = 1)
     {
         try
@@ -80,7 +78,6 @@ public class DevedorController : ControllerBase
 
 
     [HttpPost("desbloqueio-cartao")]
-    [EnableCors("AllowAll")]
     public void desbloqueio(int[] numAluno)
     {
         try
@@ -99,7 +96,6 @@ public class DevedorController : ControllerBase
     }
 
     [HttpPost("bloqueio-cartao-por-mes")]
-    [EnableCors("AllowAll")]
     public IActionResult BloquearDevedoresPorMes(DateTime dataInicial, DateTime dataFinal)
     {
         try
@@ -119,7 +115,6 @@ public class DevedorController : ControllerBase
 
 
     [HttpPost("log")]
-    [EnableCors("AllowAll")]
     public void LogBloqueio(int IsAluno, int IdEntidade, string TipoBloqueio, string AcaoBloqueio)
     {
         try
@@ -139,7 +134,6 @@ public class DevedorController : ControllerBase
 
 
     [HttpGet("log-bloqueio")]
-    [EnableCors("AllowAll")]
     public IActionResult LogBloqueio(DateTime? dataInicial, DateTime? dataFinal)
     {
         try
@@ -157,4 +151,64 @@ public class DevedorController : ControllerBase
         }
     }
 
+
+    [HttpGet("devedor-por-aluno")]
+    public IActionResult DevedorPorAluno(int numAluno)
+    {
+        try
+        {
+            var alunos = _DividasRepository.GetDevedorPorAluno(numAluno);
+            return Ok(alunos);
+        }
+        catch (ApplicationException ex)
+        {
+            return BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
+
+    [HttpPost("Criar-Ou-Atualizar-ConfigBloqueio")]
+    public void CriarOuAtualizarConfigBloqueio(bool APLICAR_MULTA, int DIA_MULTA, string horaBloqueio, int NUMERO_MESES_DIVIDA)
+    {
+        try
+        {
+            TimeOnly HORA_BLOQUEIO = TimeOnly.Parse(horaBloqueio);
+            _DividasRepository.CriarOuAtualizarConfigBloqueio(APLICAR_MULTA, DIA_MULTA, HORA_BLOQUEIO, NUMERO_MESES_DIVIDA);
+            Ok();
+        }
+        catch (FormatException)
+        {
+            BadRequest(new { mensagem = "Formato de hora inválido. Use HH:mm:ss." });
+        }
+        catch (ApplicationException ex)
+        {
+            BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
+
+
+    [HttpGet("confi-bloqueio")]
+    public IActionResult ConfigBloqueio()
+    {
+        try
+        {
+            var alunos = _DividasRepository.ObterTodasConfigBloqueio();
+            return Ok(alunos);
+        }
+        catch (ApplicationException ex)
+        {
+            return BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
 }
