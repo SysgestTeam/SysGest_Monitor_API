@@ -23,7 +23,7 @@ namespace SistemasdeTarefas.Repository
             }
 
             int totalLinhasAfetadas = 0;
-
+ 
             try
             {
                 using (SqlConnection connection = new SqlConnection(_connectionString))
@@ -130,6 +130,7 @@ namespace SistemasdeTarefas.Repository
                 throw new ApplicationException("Erro ao bloquear os cartões.", ex);
             }
         }
+        
         public int BloquearDevedoresPorMes(DateTime dataInicial, DateTime dataFinal)
         {
             List<int> alunosDevedores = new List<int>();

@@ -17,13 +17,15 @@ public class AlunoController : ControllerBase
         _alunoRepository = alunoRepository;
     }
 
-    
+
     [HttpGet("GetTodosAlunos")]
-    public IEnumerable<Student> GetAllStudents(int ano)
+    public ActionResult<IEnumerable<Student>> GetAllStudents(int ano,  int status)
     {
-        var alunos = _alunoRepository.GetAllStudents(ano);
-        return alunos;
+        var alunos = _alunoRepository.GetAllStudents(ano, status);
+
+        return Ok(alunos);
     }
+
 
     [HttpGet("courses")]
     public IEnumerable<Class> courses(int ano)

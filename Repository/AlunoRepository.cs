@@ -65,7 +65,7 @@ namespace SistemasdeTarefas.Repository
 
             return classesDict.Values;
         }
-        public IEnumerable<Student> GetAllStudents(int ano)
+        public IEnumerable<Student> GetAllStudents(int ano, int status)
         {
             List<Student> students = new List<Student>();
 
@@ -73,48 +73,50 @@ namespace SistemasdeTarefas.Repository
             {
                 connection.Open();
 
-                string sqlQuery = @$"		SELECT 
-		TABALUNOS.NUMALUNO  AS User_id, 
-		CINUMERO UserName,
-		TABALUNOS.NOME Full_name,
-        LEFT(TABALUNOS.NOME, CHARINDEX(' ', TABALUNOS.NOME + ' ') - 1) AS first_name,
-	    RIGHT(TABALUNOS.NOME, CHARINDEX(' ', REVERSE(TABALUNOS.NOME)) - 1) AS last_name,
-		EMAIL ,
-		CASE 
-        WHEN SEXO = 1 THEN 'Masculine' 
-        WHEN SEXO = 0 THEN 'Feminine' 
-        ELSE 'Not informed' 
-    END AS gender,
-		FOTO user_photo,
-		BAIRRO neighborhood,
-		MORADA address,
-		MUNICIPIO municipality,
-		COMUNA commune,
-		DATANASC date_of_birth,
-		OIEMAILMAE mother_email,
-		OINOMEMAE mother_name,
-		OITELFMAE mother_phone,
-		OIEMAILPAI father_email,
-		OINOMEPAI father_name,
-		OITELFPAI father_phone,
-		TABCLASSES.NOME class,
-		TABTURMAS.IDTURMA batch_id,
-		TABTURMAS.NOME batch,
-		CartaoAluno.Bloqueado is_blocked,
-		TABSTATUS.NOME status
-		FROM TABALUNOS
-			JOIN TABMATRICULAS
-		ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO
-			JOIN TABTURMAS
-		ON TABTURMAS.IDTURMA =  TABMATRICULAS.IDTURMA
-			LEFT JOIN CartaoAluno
-		ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
-			JOIN TABSTATUS
-		ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
-			JOIN  TABCLASSES
-		 ON TABCLASSES.IDCLASSE =  TABTURMAS.IDCLASSE
-			WHERE TABMATRICULAS.IDANOLECTIVO =(SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = 2025)
-		ORDER BY TABALUNOS.NUMALUNO ASC";
+                string sqlQuery = @$"
+                    SELECT 
+		                TABALUNOS.NUMALUNO  AS User_id, 
+		                CINUMERO UserName,
+		                TABALUNOS.NOME Full_name,
+                        LEFT(TABALUNOS.NOME, CHARINDEX(' ', TABALUNOS.NOME + ' ') - 1) AS first_name,
+	                    RIGHT(TABALUNOS.NOME, CHARINDEX(' ', REVERSE(TABALUNOS.NOME)) - 1) AS last_name,
+		                EMAIL ,
+		                CASE 
+                        WHEN SEXO = 1 THEN 'Masculine' 
+                        WHEN SEXO = 0 THEN 'Feminine' 
+                        ELSE 'Not informed' 
+                    END AS gender,
+		                FOTO user_photo,
+		                BAIRRO neighborhood,
+		                MORADA address,
+		                MUNICIPIO municipality,
+		                COMUNA commune,
+		                DATANASC date_of_birth,
+		                OIEMAILMAE mother_email,
+		                OINOMEMAE mother_name,
+		                OITELFMAE mother_phone,
+		                OIEMAILPAI father_email,
+		                OINOMEPAI father_name,
+		                OITELFPAI father_phone,
+		                TABCLASSES.NOME class,
+		                TABTURMAS.IDTURMA batch_id,
+		                TABTURMAS.NOME batch,
+		                CartaoAluno.Bloqueado is_blocked,
+		                TABSTATUS.NOME status
+		                FROM TABALUNOS
+			                JOIN TABMATRICULAS
+		                ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO
+			                JOIN TABTURMAS
+		                ON TABTURMAS.IDTURMA =  TABMATRICULAS.IDTURMA
+			                LEFT JOIN CartaoAluno
+		                ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
+			                JOIN TABSTATUS
+		                ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
+			                JOIN  TABCLASSES
+		                 ON TABCLASSES.IDCLASSE =  TABTURMAS.IDCLASSE
+			                WHERE TABMATRICULAS.IDANOLECTIVO =(SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                            AND TABMATRICULAS.IDSTATUS = {status}
+		                ORDER BY TABALUNOS.NUMALUNO ASC";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
                 {

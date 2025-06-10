@@ -7,6 +7,7 @@ using SistemasdeTarefas.Interface;
 [EnableCors("AllowAll")]
 public class DevedorController : ControllerBase
 {
+
     private readonly ILogger<DevedorController> _logger;
     private readonly IDividasRepository _DividasRepository;
 
@@ -15,8 +16,6 @@ public class DevedorController : ControllerBase
         _logger = logger;
         _DividasRepository = DividasRepository;
     }
-
-
 
     [HttpGet()]
     public IActionResult GetDevedores(DateTime? DataInicio = null, DateTime? DataFim = null)
@@ -36,8 +35,6 @@ public class DevedorController : ControllerBase
         }
     }
 
-
-
     [HttpPost("bloqueio-cartao")]
     public IActionResult BloqueioEmMassa(int[] numAluno, bool emMassa = false)
     {
@@ -56,7 +53,6 @@ public class DevedorController : ControllerBase
         }
     }
 
-
     [HttpPost("nao-ou-bloqueio-cartao")]
     public IActionResult NaoOuBloqueioEmMassa(int[] numAluno = null, int tipo = 1)
     {
@@ -74,8 +70,6 @@ public class DevedorController : ControllerBase
             return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
         }
     }
-
-
 
     [HttpPost("desbloqueio-cartao")]
     public void desbloqueio(int[] numAluno)
@@ -112,8 +106,6 @@ public class DevedorController : ControllerBase
             return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
         }
     }
-
-
     [HttpPost("log")]
     public void LogBloqueio(int IsAluno, int IdEntidade, string TipoBloqueio, string AcaoBloqueio)
     {
@@ -131,8 +123,6 @@ public class DevedorController : ControllerBase
             StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
         }
     }
-
-
     [HttpGet("log-bloqueio")]
     public IActionResult LogBloqueio(DateTime? dataInicial, DateTime? dataFinal)
     {
@@ -150,7 +140,6 @@ public class DevedorController : ControllerBase
             return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
         }
     }
-
 
     [HttpGet("devedor-por-aluno")]
     public IActionResult DevedorPorAluno(int numAluno)
@@ -192,7 +181,6 @@ public class DevedorController : ControllerBase
             StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
         }
     }
-
 
     [HttpGet("confi-bloqueio")]
     public IActionResult ConfigBloqueio()
