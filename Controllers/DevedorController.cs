@@ -36,11 +36,11 @@ public class DevedorController : ControllerBase
     }
 
     [HttpPost("bloqueio-cartao")]
-    public IActionResult BloqueioEmMassa(int[] numAluno, bool emMassa = false)
+    public IActionResult BloqueioEmMassa(int ano, int[] numAluno, bool emMassa = false)
     {
         try
         {
-            int linhasAfetadas = _DividasRepository.BloqueioCartao(numAluno, emMassa);
+            int linhasAfetadas = _DividasRepository.BloqueioCartao(ano, numAluno, emMassa);
             return Ok(new { mensagem = "Bloqueio realizado com sucesso.", totalLinhasAfetadas = linhasAfetadas });
         }
         catch (ApplicationException ex)
@@ -54,11 +54,11 @@ public class DevedorController : ControllerBase
     }
 
     [HttpPost("nao-ou-bloqueio-cartao")]
-    public IActionResult NaoOuBloqueioEmMassa(int[] numAluno = null, int tipo = 1)
+    public IActionResult NaoOuBloqueioEmMassa(int ano,int[] numAluno = null, int tipo = 1)
     {
         try
         {
-            _DividasRepository.NaoOUBloqueioCartao(numAluno,tipo);
+            _DividasRepository.NaoOUBloqueioCartao(ano,numAluno,tipo);
             return Ok(new { mensagem = "Operação realizado com sucesso."});
         }
         catch (ApplicationException ex)
@@ -72,11 +72,11 @@ public class DevedorController : ControllerBase
     }
 
     [HttpPost("desbloqueio-cartao")]
-    public void desbloqueio(int[] numAluno)
+    public void desbloqueio(int ano,int[] numAluno)
     {
         try
         {
-            _DividasRepository.DesbloqueioCartao(numAluno);
+            _DividasRepository.DesbloqueioCartao(ano,numAluno);
             Ok();
         }
         catch (ApplicationException ex)
@@ -90,11 +90,11 @@ public class DevedorController : ControllerBase
     }
 
     [HttpPost("bloqueio-cartao-por-mes")]
-    public IActionResult BloquearDevedoresPorMes(DateTime dataInicial, DateTime dataFinal)
+    public IActionResult BloquearDevedoresPorMes(int ano,DateTime dataInicial, DateTime dataFinal)
     {
         try
         {
-            int linhasAfetadas = _DividasRepository.BloquearDevedoresPorMes(dataInicial, dataFinal);
+            int linhasAfetadas = _DividasRepository.BloquearDevedoresPorMes(ano, dataInicial, dataFinal);
             return Ok(new { mensagem = "Bloqueio realizado com sucesso.", totalLinhasAfetadas = linhasAfetadas });
         }
         catch (ApplicationException ex)

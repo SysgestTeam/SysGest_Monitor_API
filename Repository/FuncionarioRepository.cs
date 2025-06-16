@@ -42,7 +42,7 @@ namespace SistemasdeTarefas.Repository
                             if (reader["foto"] != DBNull.Value)
                             {
                                 funcionario.foto = (byte[])reader.GetValue(3);
-                            }
+                            } 
 
                             funcionarios.Add(funcionario);
                         }

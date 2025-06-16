@@ -15,7 +15,7 @@ namespace SistemasdeTarefas.Repository
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
-        public int BloqueioCartao(int[] numAluno = null, bool emMassa = false)
+        public int BloqueioCartao(int ano,int[] numAluno = null, bool emMassa = false)
         {
             if (numAluno == null && !emMassa)
             {
@@ -30,15 +30,13 @@ namespace SistemasdeTarefas.Repository
                 {
                     connection.Open();
 
-                    // Obtém o ID do último ano letivo
-                    string anoQuery = "SELECT MAX(IDANO) FROM TABANOSLECTIVOS";
+                    string anoQuery = $"SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano}";
                     int idAno;
                     using (SqlCommand anoCmd = new SqlCommand(anoQuery, connection))
                     {
                         idAno = (int)anoCmd.ExecuteScalar();
                     }
 
-                    // Inicia a transação
                     using (var transaction = connection.BeginTransaction())
                     {
                         try
@@ -131,7 +129,7 @@ namespace SistemasdeTarefas.Repository
             }
         }
         
-        public int BloquearDevedoresPorMes(DateTime dataInicial, DateTime dataFinal)
+        public int BloquearDevedoresPorMes(int ano, DateTime dataInicial, DateTime dataFinal)
         {
             List<int> alunosDevedores = new List<int>();
 
@@ -157,7 +155,7 @@ namespace SistemasdeTarefas.Repository
 
             if (alunosDevedores.Any())
             {
-                 return BloqueioCartao(alunosDevedores.ToArray(), false);
+                 return BloqueioCartao(ano,alunosDevedores.ToArray(), false);
             }
 
             return 0;
@@ -203,7 +201,7 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-        public void DesbloqueioCartao(int[] numAluno = null)
+        public void DesbloqueioCartao(int ano, int[] numAluno = null)
         {
             if (numAluno == null)
             {
@@ -217,7 +215,7 @@ namespace SistemasdeTarefas.Repository
                     connection.Open();
 
                     // Obtém o ID do último ano letivo
-                    string anoQuery = "SELECT MAX(IDANO) FROM TABANOSLECTIVOS";
+                    string anoQuery = $"SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano}";
                     int idAno;
                     using (SqlCommand anoCmd = new SqlCommand(anoQuery, connection))
                     {
@@ -406,7 +404,7 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-        public void NaoOUBloqueioCartao(int[] numAluno = null, int tipo = 1)
+        public void NaoOUBloqueioCartao(int ano,int[] numAluno = null, int tipo = 1)
         {
            if (numAluno == null)
             {
@@ -419,7 +417,7 @@ namespace SistemasdeTarefas.Repository
                 {
                     connection.Open();
 
-                    string anoQuery = "SELECT MAX(IDANO) FROM TABANOSLECTIVOS";
+                    string anoQuery = $"SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano}";
                     int idAno;
                     using (SqlCommand anoCmd = new SqlCommand(anoQuery, connection))
                     {
