@@ -69,9 +69,9 @@ namespace SistemasdeTarefas.Controllers
 
 
         [HttpGet("todos-cartoes")]
-        public ActionResult<IEnumerable<Existencia_Card>> GetTodos()
+        public ActionResult<IEnumerable<Existencia_Card>> GetTodos(int ano)
         {
-            var inexistenciaCards = _existenciaCardRepository.GetTodosCartoes();
+            var inexistenciaCards = _existenciaCardRepository.GetTodosCartoes(ano);
             return Ok(inexistenciaCards);
         }
     }

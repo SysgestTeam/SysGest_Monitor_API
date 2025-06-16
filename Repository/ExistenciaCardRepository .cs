@@ -274,7 +274,7 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-        public IEnumerable<Existencia_Card> GetTodosCartoes()
+        public IEnumerable<Existencia_Card> GetTodosCartoes(int ano)
         {
             List<Existencia_Card> inexistenciaCards = new List<Existencia_Card>();
 
@@ -284,7 +284,7 @@ namespace SistemasdeTarefas.Repository
 
                 // Nome do procedimento armazenado
                 string query = @$"SELECT * FROM CartaoAluno
-                        WHERE IdAno = (SELECT MAX(IdAno) FROM TABANOSLECTIVOS)";
+                        WHERE IdAno = (SELECT IdAno FROM TABANOSLECTIVOS WHERE ANO = {ano})";
 
                 using (SqlCommand cmd = new SqlCommand(query, connection))
                 {
@@ -302,7 +302,6 @@ namespace SistemasdeTarefas.Repository
                                 Bloqueado = reader.IsDBNull(12) ? false : reader.GetBoolean(12),
                                 NaoBloqueavel = reader.IsDBNull(24) ? (bool?)null : reader.GetBoolean(24),
                             };
-
 
                             inexistenciaCards.Add(card);
                         }
