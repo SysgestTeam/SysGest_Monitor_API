@@ -69,11 +69,63 @@ namespace SistemasdeTarefas.Repository
         {
             List<Student> students = new List<Student>();
 
+            string sqlQuery = "";
+
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
 
-                string sqlQuery = @$"
+                if (status == 1)
+                {
+                    sqlQuery = @$"SELECT 
+                        TABALUNOS.NUMALUNO AS User_id, 
+                        CINUMERO AS UserName,
+                        TABALUNOS.NOME AS Full_name,
+                        LEFT(TABALUNOS.NOME, CHARINDEX(' ', TABALUNOS.NOME + ' ') - 1) AS first_name,
+                        RIGHT(TABALUNOS.NOME, CHARINDEX(' ', REVERSE(TABALUNOS.NOME)) - 1) AS last_name,
+                        EMAIL,
+                        CASE 
+                            WHEN SEXO = 1 THEN 'Masculine' 
+                            WHEN SEXO = 0 THEN 'Feminine' 
+                            ELSE 'Not informed' 
+                        END AS gender,
+                        FOTO AS user_photo,
+                        BAIRRO AS neighborhood,
+                        MORADA AS address,
+                        MUNICIPIO AS municipality,
+                        COMUNA AS commune,
+                        DATANASC AS date_of_birth,
+                        OIEMAILMAE AS mother_email,
+                        OINOMEMAE AS mother_name,
+                        OITELFMAE AS mother_phone,
+                        OIEMAILPAI AS father_email,
+                        OINOMEPAI AS father_name,
+                        OITELFPAI AS father_phone,
+                        TABCLASSES.NOME AS class,
+                        TABTURMAS.IDTURMA AS batch_id,
+                        TABTURMAS.NOME AS batch,
+                        CartaoAluno.Bloqueado AS is_blocked,
+                        TABSTATUS.NOME AS status
+                    FROM TABALUNOS
+                        LEFT JOIN TABMATRICULAS 
+                            ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
+                            AND TABMATRICULAS.IDANOLECTIVO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                        LEFT JOIN TABTURMAS 
+                            ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA
+                        LEFT JOIN TABCLASSES 
+                            ON TABCLASSES.IDCLASSE = TABTURMAS.IDCLASSE
+                        LEFT JOIN CartaoAluno 
+                            ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
+                        JOIN TABSTATUS 
+                            ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
+                    WHERE TABMATRICULAS.IDALUNO IS NULL
+                    ORDER BY TABALUNOS.NUMALUNO ASC;
+                    ";
+                }
+                else
+                {
+
+                 sqlQuery = @$"
                     SELECT 
 		                TABALUNOS.NUMALUNO  AS User_id, 
 		                CINUMERO UserName,
@@ -117,13 +169,26 @@ namespace SistemasdeTarefas.Repository
 			                WHERE TABMATRICULAS.IDANOLECTIVO =(SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
                             AND TABMATRICULAS.IDSTATUS = {status}
 		                ORDER BY TABALUNOS.NUMALUNO ASC";
-
+                }
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
                 {
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
+
+                            byte[]? photoBytes = reader.IsDBNull(reader.GetOrdinal("user_photo"))
+                            ? null
+                            : (byte[])reader["user_photo"];
+
+                            string? base64Photo = photoBytes != null
+                            ? Convert.ToBase64String(photoBytes)
+                            : null;
+
+                            string? photoLink = base64Photo != null
+                            ? $"<a href='data:image/jpeg;base64,{base64Photo}' download='foto.jpg'>Baixar Foto</a>"
+                            : null;
+
                             Student student = new Student
                             {
                                 UserId = reader.IsDBNull(reader.GetOrdinal("User_id")) ? 0 : reader.GetInt32(reader.GetOrdinal("User_id")),
@@ -133,7 +198,8 @@ namespace SistemasdeTarefas.Repository
                                 first_name = reader.IsDBNull(reader.GetOrdinal("first_name")) ? string.Empty : reader.GetString(reader.GetOrdinal("first_name")),
                                 last_name = reader.IsDBNull(reader.GetOrdinal("last_name")) ? string.Empty : reader.GetString(reader.GetOrdinal("last_name")),
                                 Email = reader.IsDBNull(reader.GetOrdinal("EMAIL")) ? null : reader.GetString(reader.GetOrdinal("EMAIL")),
-                                UserPhoto = reader.IsDBNull(reader.GetOrdinal("user_photo")) ? null : (byte[])reader["user_photo"],
+                                UserPhoto = photoBytes,
+                                UserPhotoLink = photoLink,
                                 Neighborhood = reader.IsDBNull(reader.GetOrdinal("neighborhood")) ? null : reader.GetString(reader.GetOrdinal("neighborhood")),
                                 Address = reader.IsDBNull(reader.GetOrdinal("address")) ? null : reader.GetString(reader.GetOrdinal("address")),
                                 Municipality = reader.IsDBNull(reader.GetOrdinal("municipality")) ? null : reader.GetString(reader.GetOrdinal("municipality")),

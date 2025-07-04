@@ -142,6 +142,7 @@ namespace SistemasdeTarefas.Repository
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(new SqlParameter("@DATAINI", SqlDbType.DateTime) { Value = dataInicial });
                     cmd.Parameters.Add(new SqlParameter("@DATAFIM", SqlDbType.DateTime) { Value = dataFinal });
+                    cmd.Parameters.Add(new SqlParameter("@ANO", SqlDbType.Int) { Value = ano });
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     { 
@@ -160,7 +161,7 @@ namespace SistemasdeTarefas.Repository
 
             return 0;
         }
-        public IEnumerable<Devedor> GetDevedores(DateTime? dataInicial = null, DateTime? dataFinal = null)
+        public IEnumerable<Devedor> GetDevedores(DateTime? dataInicial = null, DateTime? dataFinal = null, int? ano = null)
         {
             List<Devedor> alunos = new List<Devedor>();
             using (SqlConnection connection = new SqlConnection(_connectionString))
@@ -173,13 +174,14 @@ namespace SistemasdeTarefas.Repository
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(new SqlParameter("@DATAINI", SqlDbType.DateTime) { Value = dataInicial });
                     cmd.Parameters.Add(new SqlParameter("@DATAFIM", SqlDbType.DateTime) { Value = dataFinal });
+                    cmd.Parameters.Add(new SqlParameter("@ANO", SqlDbType.Int) { Value = ano });
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
                             Devedor aluno = new Devedor
-                            { 
+                            {   
                                 IdAluno = reader.GetInt32(1),
                                 Nome = reader.GetString(3),
                                 NumAluno =  reader.GetInt32(4),

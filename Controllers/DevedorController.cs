@@ -18,11 +18,11 @@ public class DevedorController : ControllerBase
     }
 
     [HttpGet()]
-    public IActionResult GetDevedores(DateTime? DataInicio = null, DateTime? DataFim = null)
+    public IActionResult GetDevedores(DateTime? DataInicio = null, DateTime? DataFim = null, int? ano = null)
     {
         try
         {
-            var alunos = _DividasRepository.GetDevedores(DataInicio,DataFim);
+            var alunos = _DividasRepository.GetDevedores(DataInicio,DataFim,ano);
             return Ok(alunos);
         }
         catch (ApplicationException ex)

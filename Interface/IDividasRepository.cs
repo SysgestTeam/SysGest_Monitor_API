@@ -4,7 +4,7 @@ namespace SistemasdeTarefas.Interface
 {
     public interface IDividasRepository
     {
-        IEnumerable<Devedor> GetDevedores(DateTime? dataInicial = null, DateTime? dataFinal = null);
+        IEnumerable<Devedor> GetDevedores(DateTime? dataInicial = null, DateTime? dataFinal = null, int? ano = null);
         IEnumerable<Devedor> GetDevedorPorAluno(int numAluno);
         IEnumerable<ConfigBloqueio> ObterTodasConfigBloqueio();
         IEnumerable<LogBloqueio> LogBloqueio(DateTime? dataInicial = null, DateTime? dataFinal = null);

@@ -10,6 +10,9 @@
         public string FullName { get; set; }
         public string Email { get; set; }
         public byte[] UserPhoto { get; set; }
+        public string? UserPhotoBase64 { get; set; }
+        public string? UserPhotoLink { get; set; } 
+
         public string Neighborhood { get; set; }
         public string Address { get; set; }
         public string Municipality { get; set; }
