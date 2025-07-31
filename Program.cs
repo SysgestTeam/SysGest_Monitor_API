@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using static SistemasdeTarefas.Repository.DividasRepository;
-using Microsoft.AspNetCore.Mvc;
 
 namespace SistemasdeTarefas
 {

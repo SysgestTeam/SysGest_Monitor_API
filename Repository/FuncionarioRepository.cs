@@ -1,5 +1,4 @@
-﻿using System.Data;
-using System.Data.SqlClient;
+﻿using System.Data.SqlClient;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
 
@@ -22,7 +21,6 @@ namespace SistemasdeTarefas.Repository
             {
                 connection.Open();
 
-                // Consulta SQL para buscar as classes
                 string sqlQuery = "SELECT NumInterno,NomeFuncionario, Profissao, Foto, EMAIL FROM Funcionario WHERE INACTIVO = 0";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
@@ -37,7 +35,7 @@ namespace SistemasdeTarefas.Repository
                                 Nome = reader.GetString(1),
                                 Profissao = reader.GetString(2),
                                 EMAIL = reader.GetString(4),
-                                foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) // Verifica se a coluna é DBNull
+                                foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3)
                             };
                             if (reader["foto"] != DBNull.Value)
                             {
@@ -61,7 +59,6 @@ namespace SistemasdeTarefas.Repository
             {
                 connection.Open();
 
-                // Consulta SQL para buscar as classes
                 string sqlQuery = @"SELECT 
                                 Funcionario.NumInterno,
                                 Funcionario.NomeFuncionario, 
@@ -83,7 +80,7 @@ namespace SistemasdeTarefas.Repository
                                 Numero = reader.GetInt32(0),
                                 Nome = reader.GetString(1),
                                 Profissao = reader.GetString(2),
-                                foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) // Verifica se a coluna é DBNull
+                                foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3)
                             };
                             if (reader["foto"] != DBNull.Value)
                             {
@@ -107,7 +104,6 @@ namespace SistemasdeTarefas.Repository
             {
                 connection.Open();
 
-                // Consulta SQL para buscar as classes
                 string sqlQuery = "SELECT NumInterno,NomeFuncionario, Profissao, Foto FROM Funcionario WHERE FOTO IS NOT NULL AND INACTIVO = 0";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
@@ -121,7 +117,7 @@ namespace SistemasdeTarefas.Repository
                                 Numero = reader.GetInt32(0),
                                 Nome = reader.GetString(1),
                                 Profissao = reader.GetString(2),
-                                foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) // Verifica se a coluna é DBNull
+                                foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) 
                             };
                             if (reader["foto"] != DBNull.Value)
                             {
@@ -145,7 +141,6 @@ namespace SistemasdeTarefas.Repository
             {
                 connection.Open();
 
-                // Consulta SQL para buscar as classes
                 string sqlQuery = "SELECT NumInterno,NomeFuncionario, Profissao, Foto FROM Funcionario WHERE FOTO IS  NULL AND INACTIVO = 0";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
@@ -159,7 +154,7 @@ namespace SistemasdeTarefas.Repository
                                 Numero = reader.GetInt32(0),
                                 Nome = reader.GetString(1),
                                 Profissao = reader.GetString(2),
-                                foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) // Verifica se a coluna é DBNull
+                                foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) 
                             };
                             if (reader["foto"] != DBNull.Value)
                             {
@@ -183,7 +178,6 @@ namespace SistemasdeTarefas.Repository
             {
                 connection.Open();
 
-                // Consulta SQL para buscar as classes
                     string sqlQuery = @"SELECT 
                                 Funcionario.NumInterno,
                                 Funcionario.NomeFuncionario, 
@@ -205,7 +199,7 @@ namespace SistemasdeTarefas.Repository
                                 Numero = reader.GetInt32(0),
                                 Nome = reader.GetString(1),
                                 Profissao = reader.GetString(2),
-                                foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) // Verifica se a coluna é DBNull
+                                foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3) 
                             };
                             if (reader["foto"] != DBNull.Value)
                             {
