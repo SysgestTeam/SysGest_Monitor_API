@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
@@ -19,6 +20,7 @@ public class AlunoController : ControllerBase
 
 
     [HttpGet("GetTodosAlunos")]
+    [Authorize]
     public ActionResult<IEnumerable<Student>> GetAllStudents(int ano,  int status)
     {
         var alunos = _alunoRepository.GetAllStudents(ano, status);
@@ -26,6 +28,32 @@ public class AlunoController : ControllerBase
         return Ok(alunos);
     }
 
+    [HttpGet("GetTodosALunosComFotos")]
+    [Authorize]
+    public ActionResult<IEnumerable<Student>> GetAllCOmFotos(int ano, int status)
+    {
+        var alunos = _alunoRepository.GetAllStudentsWithPhoto(ano, status);
+
+        return Ok(alunos);
+    }
+
+    [HttpGet("count-by-year-status")]
+    [Authorize]
+    public ActionResult<IEnumerable<StudentCount>> GetCoutnAllStudentByYear(int ano, int status)
+    {
+        var alunos = _alunoRepository.GetCoutnAllStudentByYear(ano, status);
+
+        return Ok(alunos);
+    }
+
+    [HttpGet("confirmation-or-matriculation")]
+    [Authorize]
+    public ActionResult<IEnumerable<Student>> GetCoutnAllStudentConfirmationOrMatriculation(int ano, int batch)
+    {
+        var alunos = _alunoRepository.GetAllStudentsConfirmationORMatriculation(ano, batch);
+
+        return Ok(alunos);
+    }
 
     [HttpGet("courses")]
     public IEnumerable<Class> courses(int ano)

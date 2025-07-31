@@ -11,8 +11,7 @@
         public string Email { get; set; }
         public byte[] UserPhoto { get; set; }
         public string? UserPhotoBase64 { get; set; }
-        public string? UserPhotoLink { get; set; } 
-
+        public string? UserPhotoLink { get; set; }
         public string Neighborhood { get; set; }
         public string Address { get; set; }
         public string Municipality { get; set; }
@@ -27,6 +26,7 @@
         public string Class { get; set; }
         public int batch_id { get; set; }
         public string batch { get; set; }
+        public int course_id { get; set; }
         public bool? IsBlocked { get; set; }
         public string status { get; set; }
     }

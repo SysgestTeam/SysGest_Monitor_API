@@ -43,7 +43,6 @@ namespace SistemasdeTarefas.Repository
                         {
                             if (emMassa)
                             {
-                                // Bloqueio em massa
                                 string queryEmMassa = "UPDATE CartaoAluno SET Bloqueado = 1 WHERE IdAno = @idAno";
                                 using (SqlCommand cmd = new SqlCommand(queryEmMassa, connection, transaction))
                                 {
@@ -51,7 +50,7 @@ namespace SistemasdeTarefas.Repository
                                     totalLinhasAfetadas += cmd.ExecuteNonQuery();
                                 }
 
-                                // Chamada da Stored Procedure para o log
+                              
                                 using (SqlCommand logCmd = new SqlCommand("sp_InserirLogBloqueioCartao", connection, transaction))
                                 {
                                     logCmd.CommandType = CommandType.StoredProcedure;
@@ -87,7 +86,6 @@ namespace SistemasdeTarefas.Repository
                                         totalLinhasAfetadas += cmd.ExecuteNonQuery();
                                     }
 
-                                    // Inserção dos logs para cada aluno
                                     foreach (var aluno in chunk)
                                     {
                                         using (SqlCommand logCmd = new SqlCommand("sp_InserirLogBloqueioCartao", connection, transaction))
@@ -167,7 +165,7 @@ namespace SistemasdeTarefas.Repository
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
-                // Chame o procedimento armazenado
+              
                 using (SqlCommand cmd = new SqlCommand("SP_DEVEDORES", connection))
                 {
 
@@ -216,7 +214,7 @@ namespace SistemasdeTarefas.Repository
                 {
                     connection.Open();
 
-                    // Obtém o ID do último ano letivo
+                   
                     string anoQuery = $"SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano}";
                     int idAno;
                     using (SqlCommand anoCmd = new SqlCommand(anoQuery, connection))
@@ -224,18 +222,16 @@ namespace SistemasdeTarefas.Repository
                         idAno = (int)anoCmd.ExecuteScalar();
                     }
 
-                    // Inicia a transação
                     using (var transaction = connection.BeginTransaction())
                     {
                         try
                         {
-                                // Se emMassa for false, garante que a lista tenha pelo menos 1 aluno
                                 if (numAluno.Length == 0)
                                 {
                                     throw new ArgumentException("A lista de alunos não pode estar vazia.");
                                 }
 
-                                // Divide os alunos em lotes de 1000 para evitar problemas com IN
+                              
                                 int chunkSize = 1000;
                                 for (int i = 0; i < numAluno.Length; i += chunkSize)
                                 {
@@ -270,12 +266,11 @@ namespace SistemasdeTarefas.Repository
                                 }
                             }
 
-                            // Commit da transação
                             transaction.Commit();
                         }
                         catch (Exception ex)
                         {
-                            // Caso haja erro, faz o rollback
+                          
                             transaction.Rollback();
                             throw new ApplicationException("Erro ao bloquear os cartões. Operação revertida.", ex);
                         }
@@ -456,12 +451,10 @@ namespace SistemasdeTarefas.Repository
                                     }
                             }
 
-                            // Commit da transação
                             transaction.Commit();
                         }
                         catch (Exception ex)
                         {
-                            // Caso haja erro, faz o rollback
                             transaction.Rollback();
                             throw new ApplicationException("Erro ao bloquear os cartões. Operação revertida.", ex);
                         }
@@ -494,7 +487,7 @@ namespace SistemasdeTarefas.Repository
                             FROM AlunoDossier ad INNER JOIN AlunoDossierLin adl ON ad.IdAlunoDossier = adl.IdAlunoDossier
                           WHERE ad.NumAluno = {numAluno} AND ad.Deleted = 0 and adl.Deleted = 0 
 		                  and adl.Inactivo = 0 and adl.Anulado = 0  And adl.Pago = 0";
-                // Chame o procedimento armazenado
+              
                 using (SqlCommand cmd = new SqlCommand(query, connection))
                 {
 
@@ -525,41 +518,32 @@ namespace SistemasdeTarefas.Repository
                     using (SqlTransaction transaction = connection.BeginTransaction())
                     {
 
-                    
-
                         try
                         {
-                            // Cria o comando para a stored procedure
                             using (SqlCommand cmd = new SqlCommand("sp_CriarOuAtualizarConfigBloqueio", connection, transaction))
                             {
                                 cmd.CommandType = CommandType.StoredProcedure;
 
-                                // Adiciona os parâmetros para a stored procedure
                                 cmd.Parameters.Add(new SqlParameter("@APLICAR_MULTA", SqlDbType.Bit) { Value = APLICAR_MULTA });
                                 cmd.Parameters.Add(new SqlParameter("@DIA_MULTA", SqlDbType.TinyInt) { Value = DIA_MULTA });
                                 cmd.Parameters.Add(new SqlParameter("@HORA_BLOQUEIO", SqlDbType.Time) { Value = HORA_BLOQUEIO.ToTimeSpan() });
                                 cmd.Parameters.Add(new SqlParameter("@NUMERO_MESES_DIVIDA", SqlDbType.TinyInt) { Value = NUMERO_MESES_DIVIDA });
 
-                                // Executa a stored procedure
                                 cmd.ExecuteNonQuery();
                             }
 
-                            // Se tudo ocorrer bem, faz o commit da transação
                             transaction.Commit();
                         }
                         catch (SqlException sqlEx)
                         {
-                            // Caso ocorra erro, faz o rollback da transação
                             transaction.Rollback();
 
-                            // Cria a mensagem de erro detalhada
                             var errorMessage = "Erro ao criar ou atualizar a configuração de bloqueio.";
                             foreach (SqlError error in sqlEx.Errors)
                             {
                                 errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
                             }
 
-                            // Lança uma exceção com os detalhes do erro
                             throw new ApplicationException(errorMessage, sqlEx);
                         }
                     }

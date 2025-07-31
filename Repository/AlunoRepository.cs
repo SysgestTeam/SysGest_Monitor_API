@@ -20,15 +20,57 @@ namespace SistemasdeTarefas.Repository
             using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
-                string query = @"
-        SELECT TABCLASSES.IDCLASSE AS Class_id,
-               TABCLASSES.NOME AS Class, 
-               TABTURMAS.NOME AS batch, 
-               TABTURMAS.IDTURMA AS batch_id  
-        FROM TABCLASSES
-        JOIN TABTURMAS ON TABCLASSES.IDCLASSE = TABTURMAS.IDCLASSE
-        WHERE TABCLASSES.IDANO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = @Ano)";
-
+                string query = "";
+                if (ano == 2025)
+                {
+                 query = @"
+                    SELECT 
+                        CASE TABCLASSES.IDCLASSE
+                            WHEN 17 THEN 4
+                            WHEN 4  THEN 3
+                            WHEN 3  THEN 2
+                            WHEN 2  THEN 1 
+                        ELSE TABCLASSES.IDCLASSE
+                        END AS Class_id,
+                           TABCLASSES.NOME AS Class, 
+                           TABTURMAS.NOME AS batch, 
+                           TABTURMAS.IDTURMA AS batch_id  
+                    FROM TABCLASSES
+                    JOIN TABTURMAS ON TABCLASSES.IDCLASSE = TABTURMAS.IDCLASSE
+                    WHERE TABCLASSES.IDANO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = @Ano)";
+                }
+                else
+                {
+                    query = @$"SELECT
+                        cla_atu.NOME AS Class,
+                        tur_atu.NOME AS batch,
+                        tur_atu.IDTURMA AS batch_id,
+                       CASE TABCLASSES.IDCLASSE
+                            WHEN 17 THEN 4
+                            WHEN 4  THEN 3
+                            WHEN 3  THEN 2
+                            WHEN 2  THEN 1 
+                        ELSE TABCLASSES.IDCLASSE
+                        END AS Class_id,
+                    FROM
+                        TABTURMAS AS tur_atu
+                    JOIN
+                        TABCLASSES AS cla_atu ON tur_atu.IDCLASSE = cla_atu.IDCLASSE
+                    JOIN
+                        TABCLASSES AS cla_ant ON
+                            LOWER(cla_ant.NOME) =
+                            CASE LOWER(cla_atu.NOME)
+                                WHEN 'jk' THEN 'junior kindergarten'
+                                WHEN 'sk' THEN 'senior kindergarten'
+                                 WHEN 'TOODLERS' THEN 'Toddlers'
+                                ELSE LOWER(cla_atu.NOME)
+                            END
+                    WHERE
+                        cla_atu.IDANO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = @ano)
+                        AND cla_ant.IDANO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = @ano - 1)
+                    ORDER BY
+                        cla_atu.NOME, batch;";
+                }
                 using (var command = new SqlCommand(query, connection))
                 {
                     command.Parameters.AddWithValue("@Ano", ano);
@@ -105,6 +147,7 @@ namespace SistemasdeTarefas.Repository
                         TABTURMAS.IDTURMA AS batch_id,
                         TABTURMAS.NOME AS batch,
                         CartaoAluno.Bloqueado AS is_blocked,
+						TABTURMAS.IDCLASSE AS courseid,
                         TABSTATUS.NOME AS status
                     FROM TABALUNOS
                         LEFT JOIN TABMATRICULAS 
@@ -125,51 +168,567 @@ namespace SistemasdeTarefas.Repository
                 else
                 {
 
-                 sqlQuery = @$"
-                    SELECT 
-		                TABALUNOS.NUMALUNO  AS User_id, 
-		                CINUMERO UserName,
-		                TABALUNOS.NOME Full_name,
+
+                    if (ano == 2025)
+                    {
+                        sqlQuery = @$"SELECT 
+                        TABALUNOS.NUMALUNO AS User_id, 
+                        CINUMERO AS UserName,
+                        TABALUNOS.NOME AS Full_name,
                         LEFT(TABALUNOS.NOME, CHARINDEX(' ', TABALUNOS.NOME + ' ') - 1) AS first_name,
-	                    RIGHT(TABALUNOS.NOME, CHARINDEX(' ', REVERSE(TABALUNOS.NOME)) - 1) AS last_name,
-		                EMAIL ,
-		                CASE 
-                        WHEN SEXO = 1 THEN 'Masculine' 
-                        WHEN SEXO = 0 THEN 'Feminine' 
-                        ELSE 'Not informed' 
-                    END AS gender,
-		                FOTO user_photo,
-		                BAIRRO neighborhood,
-		                MORADA address,
-		                MUNICIPIO municipality,
-		                COMUNA commune,
-		                DATANASC date_of_birth,
-		                OIEMAILMAE mother_email,
-		                OINOMEMAE mother_name,
-		                OITELFMAE mother_phone,
-		                OIEMAILPAI father_email,
-		                OINOMEPAI father_name,
-		                OITELFPAI father_phone,
-		                TABCLASSES.NOME class,
-		                TABTURMAS.IDTURMA batch_id,
-		                TABTURMAS.NOME batch,
-		                CartaoAluno.Bloqueado is_blocked,
-		                TABSTATUS.NOME status
-		                FROM TABALUNOS
-			                JOIN TABMATRICULAS
-		                ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO
-			                JOIN TABTURMAS
-		                ON TABTURMAS.IDTURMA =  TABMATRICULAS.IDTURMA
-			                LEFT JOIN CartaoAluno
-		                ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
-			                JOIN TABSTATUS
-		                ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
-			                JOIN  TABCLASSES
-		                 ON TABCLASSES.IDCLASSE =  TABTURMAS.IDCLASSE
-			                WHERE TABMATRICULAS.IDANOLECTIVO =(SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                        RIGHT(TABALUNOS.NOME, CHARINDEX(' ', REVERSE(TABALUNOS.NOME)) - 1) AS last_name,
+                        EMAIL,
+                        CASE 
+                            WHEN SEXO = 1 THEN 'Masculine' 
+                            WHEN SEXO = 0 THEN 'Feminine' 
+                            ELSE 'Not informed' 
+                        END AS gender,
+                        FOTO AS user_photo,
+                        BAIRRO AS neighborhood,
+                        MORADA AS address,
+                        MUNICIPIO AS municipality,
+                        COMUNA AS commune,
+                        DATANASC AS date_of_birth,
+                        OIEMAILMAE AS mother_email,
+                        OINOMEMAE AS mother_name,
+                        OITELFMAE AS mother_phone,
+                        OIEMAILPAI AS father_email,
+                        OINOMEPAI AS father_name,
+                        OITELFPAI AS father_phone,
+                        TABCLASSES.NOME AS class,
+                        TABTURMAS.IDTURMA AS batch_id,
+                        TABTURMAS.NOME AS batch,
+                        CartaoAluno.Bloqueado AS is_blocked,
+						TABTURMAS.IDCLASSE AS courseid,
+                        TABSTATUS.NOME AS status
+                    FROM TABALUNOS
+                        LEFT JOIN TABMATRICULAS 
+                            ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
+                            AND TABMATRICULAS.IDANOLECTIVO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                        LEFT JOIN TABTURMAS 
+                            ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA
+                        LEFT JOIN TABCLASSES 
+                            ON TABCLASSES.IDCLASSE = TABTURMAS.IDCLASSE
+                        LEFT JOIN CartaoAluno 
+                            ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
+                        JOIN TABSTATUS 
+                            ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
                             AND TABMATRICULAS.IDSTATUS = {status}
-		                ORDER BY TABALUNOS.NUMALUNO ASC";
+                                        ORDER BY TABALUNOS.NUMALUNO ASC";
+                    }
+                    else if (ano > 2025)
+                    {
+                        sqlQuery = @$"SELECT 
+                        TABALUNOS.NUMALUNO AS User_id, 
+                        CINUMERO AS UserName,
+                        TABALUNOS.NOME AS Full_name,
+                        LEFT(TABALUNOS.NOME, CHARINDEX(' ', TABALUNOS.NOME + ' ') - 1) AS first_name,
+                        RIGHT(TABALUNOS.NOME, CHARINDEX(' ', REVERSE(TABALUNOS.NOME)) - 1) AS last_name,
+                        EMAIL,
+                        CASE 
+                            WHEN SEXO = 1 THEN 'Masculine' 
+                            WHEN SEXO = 0 THEN 'Feminine' 
+                            ELSE 'Not informed' 
+                        END AS gender,
+                        FOTO AS user_photo,
+                        BAIRRO AS neighborhood,
+                        MORADA AS address,
+                        MUNICIPIO AS municipality,
+                        COMUNA AS commune,
+                        DATANASC AS date_of_birth,
+                        OIEMAILMAE AS mother_email,
+                        OINOMEMAE AS mother_name,
+                        OITELFMAE AS mother_phone,
+                        OIEMAILPAI AS father_email,
+                        OINOMEPAI AS father_name,
+                        OITELFPAI AS father_phone,
+                        TABCLASSES.NOME AS class,
+                        TABTURMAS.IDTURMA AS batch_id,
+                        TABTURMAS.NOME AS batch,
+                        CartaoAluno.Bloqueado AS is_blocked,
+						CASE cla_ant.IDCLASSE
+                            WHEN 17 THEN 4
+                            WHEN 4  THEN 3
+                            WHEN 3  THEN 2
+                            WHEN 2  THEN 1 
+                        ELSE cla_ant.IDCLASSE
+                        END AS courseid,
+                        TABSTATUS.NOME AS status
+                    FROM TABALUNOS
+                        LEFT JOIN TABMATRICULAS 
+                            ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
+                            AND TABMATRICULAS.IDANOLECTIVO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                        LEFT JOIN TABTURMAS 
+                            ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA
+                        LEFT JOIN TABCLASSES 
+                            ON TABCLASSES.IDCLASSE = TABTURMAS.IDCLASSE
+                        LEFT JOIN CartaoAluno 
+                            ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
+                        JOIN TABSTATUS 
+                            ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
+						        JOIN
+                    TABCLASSES AS cla_atu ON TABTURMAS.IDCLASSE = cla_atu.IDCLASSE
+                JOIN
+                    TABCLASSES AS cla_ant ON
+                        LOWER(cla_ant.NOME) =
+                        CASE LOWER(cla_atu.NOME)
+                            WHEN 'jk' THEN 'junior kindergarten'
+                            WHEN 'sk' THEN 'senior kindergarten'
+			                 WHEN 'TOODLERS' THEN 'Toddlers'
+                            ELSE LOWER(cla_atu.NOME)
+                        END
+                WHERE
+                    cla_atu.IDANO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                    AND cla_ant.IDANO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO =  {ano} - 1)
+                                                                AND TABMATRICULAS.IDSTATUS = {status}
+                                    ORDER BY TABALUNOS.NUMALUNO ASC";
+                    }
+
                 }
+
+                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+
+                            byte[]? photoBytes = reader.IsDBNull(reader.GetOrdinal("user_photo"))
+                            ? null
+                            : (byte[])reader["user_photo"];
+
+                            string? base64Photo = photoBytes != null
+                            ? Convert.ToBase64String(photoBytes)
+                            : null;
+
+                            string? photoLink = base64Photo != null
+                            ? $"<a href='data:image/jpeg;base64,{base64Photo}' download='foto.jpg'>Baixar Foto</a>"
+                            : null;
+
+                            Student student = new Student
+                            {
+                                UserId = reader.IsDBNull(reader.GetOrdinal("User_id")) ? 0 : reader.GetInt32(reader.GetOrdinal("User_id")),
+                                UserName = reader.IsDBNull(reader.GetOrdinal("UserName")) ? string.Empty : reader.GetString(reader.GetOrdinal("UserName")),
+                                gender = reader.IsDBNull(reader.GetOrdinal("gender")) ? string.Empty : reader.GetString(reader.GetOrdinal("gender")),
+                                FullName = reader.IsDBNull(reader.GetOrdinal("Full_name")) ? string.Empty : reader.GetString(reader.GetOrdinal("Full_name")),
+                                first_name = reader.IsDBNull(reader.GetOrdinal("first_name")) ? string.Empty : reader.GetString(reader.GetOrdinal("first_name")),
+                                last_name = reader.IsDBNull(reader.GetOrdinal("last_name")) ? string.Empty : reader.GetString(reader.GetOrdinal("last_name")),
+                                Email = reader.IsDBNull(reader.GetOrdinal("EMAIL")) ? null : reader.GetString(reader.GetOrdinal("EMAIL")),
+                                //UserPhoto = photoBytes,
+                                //UserPhotoLink = photoLink,
+                                Neighborhood = reader.IsDBNull(reader.GetOrdinal("neighborhood")) ? null : reader.GetString(reader.GetOrdinal("neighborhood")),
+                                Address = reader.IsDBNull(reader.GetOrdinal("address")) ? null : reader.GetString(reader.GetOrdinal("address")),
+                                Municipality = reader.IsDBNull(reader.GetOrdinal("municipality")) ? null : reader.GetString(reader.GetOrdinal("municipality")),
+                                Commune = reader.IsDBNull(reader.GetOrdinal("commune")) ? null : reader.GetString(reader.GetOrdinal("commune")),
+                                DateOfBirth = (DateTime)(reader.IsDBNull(reader.GetOrdinal("date_of_birth")) ? (DateTime?)null : reader.GetDateTime(reader.GetOrdinal("date_of_birth"))),
+                                MotherEmail = reader.IsDBNull(reader.GetOrdinal("mother_email")) ? null : reader.GetString(reader.GetOrdinal("mother_email")),
+                                MotherName = reader.IsDBNull(reader.GetOrdinal("mother_name")) ? null : reader.GetString(reader.GetOrdinal("mother_name")),
+                                MotherPhone = reader.IsDBNull(reader.GetOrdinal("mother_phone")) ? null : reader.GetString(reader.GetOrdinal("mother_phone")),
+                                FatherEmail = reader.IsDBNull(reader.GetOrdinal("father_email")) ? null : reader.GetString(reader.GetOrdinal("father_email")),
+                                FatherName = reader.IsDBNull(reader.GetOrdinal("father_name")) ? null : reader.GetString(reader.GetOrdinal("father_name")),
+                                FatherPhone = reader.IsDBNull(reader.GetOrdinal("father_phone")) ? null : reader.GetString(reader.GetOrdinal("father_phone")),
+                                Class = reader.IsDBNull(reader.GetOrdinal("class")) ? string.Empty : reader.GetString(reader.GetOrdinal("class")),
+                            IsBlocked = reader.IsDBNull(reader.GetOrdinal("is_blocked"))? (bool?)null: reader.GetBoolean(reader.GetOrdinal("is_blocked")),
+                                batch_id = reader.IsDBNull(reader.GetOrdinal("batch_id")) ? 0 : reader.GetInt32(reader.GetOrdinal("batch_id")),
+                                batch = reader.IsDBNull(reader.GetOrdinal("batch")) ? string.Empty : reader.GetString(reader.GetOrdinal("batch")),
+                                course_id = reader.IsDBNull(reader.GetOrdinal("courseid")) ? 0 : reader.GetInt32(reader.GetOrdinal("courseid")),
+                                status = reader.IsDBNull(reader.GetOrdinal("status")) ? null : reader.GetString(reader.GetOrdinal("status"))
+                            };
+
+                            students.Add(student);
+                        }
+                    }
+                }
+            }
+
+            return students;
+        }
+
+        public IEnumerable<Student> GetAllStudentsConfirmationORMatriculation(int ano, int status)
+        {
+            List<Student> students = new List<Student>();
+
+            string sqlQuery = "";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                if(status == 1){
+                     sqlQuery = @$"
+
+                       SELECT 
+                        TABALUNOS.NUMALUNO AS User_id, 
+                        CINUMERO AS UserName,
+                        TABALUNOS.NOME AS Full_name,
+                        LEFT(TABALUNOS.NOME, CHARINDEX(' ', TABALUNOS.NOME + ' ') - 1) AS first_name,
+                        RIGHT(TABALUNOS.NOME, CHARINDEX(' ', REVERSE(TABALUNOS.NOME)) - 1) AS last_name,
+                        EMAIL,
+                        CASE 
+                            WHEN SEXO = 1 THEN 'Masculine' 
+                            WHEN SEXO = 0 THEN 'Feminine' 
+                            ELSE 'Not informed' 
+                        END AS gender,
+                        FOTO AS user_photo,
+                        BAIRRO AS neighborhood,
+                        MORADA AS address,
+                        MUNICIPIO AS municipality,
+                        COMUNA AS commune,
+                        DATANASC AS date_of_birth,
+                        OIEMAILMAE AS mother_email,
+                        OINOMEMAE AS mother_name,
+                        OITELFMAE AS mother_phone,
+                        OIEMAILPAI AS father_email,
+                        OINOMEPAI AS father_name,
+                        OITELFPAI AS father_phone,
+                        TABCLASSES.NOME AS class,
+                        TABTURMAS.IDTURMA AS batch_id,
+                        TABTURMAS.NOME AS batch,
+                        CartaoAluno.Bloqueado AS is_blocked,
+					                CASE cla_ant.IDCLASSE
+                            WHEN 17 THEN 4
+                            WHEN 4  THEN 3
+                            WHEN 3  THEN 2
+                            WHEN 2  THEN 1 
+                        ELSE cla_ant.IDCLASSE
+                        END AS courseid,
+                        'Confirmation' AS status
+                    FROM TABALUNOS
+                        LEFT JOIN TABMATRICULAS 
+                            ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
+                            AND TABMATRICULAS.IDANOLECTIVO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                        LEFT JOIN TABTURMAS 
+                            ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA
+                        LEFT JOIN TABCLASSES 
+                            ON TABCLASSES.IDCLASSE = TABTURMAS.IDCLASSE
+                        LEFT JOIN CartaoAluno 
+                            ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
+                        JOIN TABSTATUS 
+                            ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
+					                        JOIN
+                    TABCLASSES AS cla_atu ON TABTURMAS.IDCLASSE = cla_atu.IDCLASSE
+                JOIN
+                    TABCLASSES AS cla_ant ON
+                        LOWER(cla_ant.NOME) =
+                        CASE LOWER(cla_atu.NOME)
+                            WHEN 'jk' THEN 'junior kindergarten'
+                            WHEN 'sk' THEN 'senior kindergarten'
+                             WHEN 'TOODLERS' THEN 'Toddlers'
+                            ELSE LOWER(cla_atu.NOME)
+                        END
+                WHERE
+                    cla_atu.IDANO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                    AND cla_ant.IDANO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO =  2025)
+                                                                AND TABMATRICULAS.IDSTATUS = 2 AND TABMATRICULAS.CONFMATRICULA = 1 AND TABMATRICULAS.ISMATRICULA= 0
+                                    ORDER BY TABALUNOS.NUMALUNO ASC";
+
+                }
+                else if(status == 2)
+                {
+                    sqlQuery = @$"
+                       SELECT 
+                        TABALUNOS.NUMALUNO AS User_id, 
+                        CINUMERO AS UserName,
+                        TABALUNOS.NOME AS Full_name,
+                        LEFT(TABALUNOS.NOME, CHARINDEX(' ', TABALUNOS.NOME + ' ') - 1) AS first_name,
+                        RIGHT(TABALUNOS.NOME, CHARINDEX(' ', REVERSE(TABALUNOS.NOME)) - 1) AS last_name,
+                        EMAIL,
+                        CASE 
+                            WHEN SEXO = 1 THEN 'Masculine' 
+                            WHEN SEXO = 0 THEN 'Feminine' 
+                            ELSE 'Not informed' 
+                        END AS gender,
+                        FOTO AS user_photo,
+                        BAIRRO AS neighborhood,
+                        MORADA AS address,
+                        MUNICIPIO AS municipality,
+                        COMUNA AS commune,
+                        DATANASC AS date_of_birth,
+                        OIEMAILMAE AS mother_email,
+                        OINOMEMAE AS mother_name,
+                        OITELFMAE AS mother_phone,
+                        OIEMAILPAI AS father_email,
+                        OINOMEPAI AS father_name,
+                        OITELFPAI AS father_phone,
+                        TABCLASSES.NOME AS class,
+                        TABTURMAS.IDTURMA AS batch_id,
+                        TABTURMAS.NOME AS batch,
+                        CartaoAluno.Bloqueado AS is_blocked,
+					                CASE cla_ant.IDCLASSE
+                            WHEN 17 THEN 4
+                            WHEN 4  THEN 3
+                            WHEN 3  THEN 2
+                            WHEN 2  THEN 1 
+                        ELSE cla_ant.IDCLASSE
+                        END AS courseid,
+                        'Matriculation' AS status
+                    FROM TABALUNOS
+                        LEFT JOIN TABMATRICULAS 
+                            ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
+                            AND TABMATRICULAS.IDANOLECTIVO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                        LEFT JOIN TABTURMAS 
+                            ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA
+                        LEFT JOIN TABCLASSES 
+                            ON TABCLASSES.IDCLASSE = TABTURMAS.IDCLASSE
+                        LEFT JOIN CartaoAluno 
+                            ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
+                        JOIN TABSTATUS 
+                            ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
+					                        JOIN
+                    TABCLASSES AS cla_atu ON TABTURMAS.IDCLASSE = cla_atu.IDCLASSE
+                JOIN
+                    TABCLASSES AS cla_ant ON
+                        LOWER(cla_ant.NOME) =
+                        CASE LOWER(cla_atu.NOME)
+                            WHEN 'jk' THEN 'junior kindergarten'
+                            WHEN 'sk' THEN 'senior kindergarten'
+                             WHEN 'TOODLERS' THEN 'Toddlers'
+                            ELSE LOWER(cla_atu.NOME)
+                        END
+                WHERE
+                    cla_atu.IDANO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                    AND cla_ant.IDANO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO =  2025)
+                                                                AND TABMATRICULAS.IDSTATUS = 2 AND TABMATRICULAS.CONFMATRICULA = 0 AND TABMATRICULAS.ISMATRICULA= 1
+                                    ORDER BY TABALUNOS.NUMALUNO ASC";
+                }
+
+                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+
+                            byte[]? photoBytes = reader.IsDBNull(reader.GetOrdinal("user_photo"))
+                            ? null
+                            : (byte[])reader["user_photo"];
+
+                            string? base64Photo = photoBytes != null
+                            ? Convert.ToBase64String(photoBytes)
+                            : null;
+
+                            string? photoLink = base64Photo != null
+                            ? $"<a href='data:image/jpeg;base64,{base64Photo}' download='foto.jpg'>Baixar Foto</a>"
+                            : null;
+
+                            Student student = new Student
+                            {
+                                UserId = reader.IsDBNull(reader.GetOrdinal("User_id")) ? 0 : reader.GetInt32(reader.GetOrdinal("User_id")),
+                                UserName = reader.IsDBNull(reader.GetOrdinal("UserName")) ? string.Empty : reader.GetString(reader.GetOrdinal("UserName")),
+                                gender = reader.IsDBNull(reader.GetOrdinal("gender")) ? string.Empty : reader.GetString(reader.GetOrdinal("gender")),
+                                FullName = reader.IsDBNull(reader.GetOrdinal("Full_name")) ? string.Empty : reader.GetString(reader.GetOrdinal("Full_name")),
+                                first_name = reader.IsDBNull(reader.GetOrdinal("first_name")) ? string.Empty : reader.GetString(reader.GetOrdinal("first_name")),
+                                last_name = reader.IsDBNull(reader.GetOrdinal("last_name")) ? string.Empty : reader.GetString(reader.GetOrdinal("last_name")),
+                                Email = reader.IsDBNull(reader.GetOrdinal("EMAIL")) ? null : reader.GetString(reader.GetOrdinal("EMAIL")),
+                                //UserPhoto = photoBytes,
+                                //UserPhotoLink = photoLink,
+                                Neighborhood = reader.IsDBNull(reader.GetOrdinal("neighborhood")) ? null : reader.GetString(reader.GetOrdinal("neighborhood")),
+                                Address = reader.IsDBNull(reader.GetOrdinal("address")) ? null : reader.GetString(reader.GetOrdinal("address")),
+                                Municipality = reader.IsDBNull(reader.GetOrdinal("municipality")) ? null : reader.GetString(reader.GetOrdinal("municipality")),
+                                Commune = reader.IsDBNull(reader.GetOrdinal("commune")) ? null : reader.GetString(reader.GetOrdinal("commune")),
+                                DateOfBirth = (DateTime)(reader.IsDBNull(reader.GetOrdinal("date_of_birth")) ? (DateTime?)null : reader.GetDateTime(reader.GetOrdinal("date_of_birth"))),
+                                MotherEmail = reader.IsDBNull(reader.GetOrdinal("mother_email")) ? null : reader.GetString(reader.GetOrdinal("mother_email")),
+                                MotherName = reader.IsDBNull(reader.GetOrdinal("mother_name")) ? null : reader.GetString(reader.GetOrdinal("mother_name")),
+                                MotherPhone = reader.IsDBNull(reader.GetOrdinal("mother_phone")) ? null : reader.GetString(reader.GetOrdinal("mother_phone")),
+                                FatherEmail = reader.IsDBNull(reader.GetOrdinal("father_email")) ? null : reader.GetString(reader.GetOrdinal("father_email")),
+                                FatherName = reader.IsDBNull(reader.GetOrdinal("father_name")) ? null : reader.GetString(reader.GetOrdinal("father_name")),
+                                FatherPhone = reader.IsDBNull(reader.GetOrdinal("father_phone")) ? null : reader.GetString(reader.GetOrdinal("father_phone")),
+                                Class = reader.IsDBNull(reader.GetOrdinal("class")) ? string.Empty : reader.GetString(reader.GetOrdinal("class")),
+                                IsBlocked = reader.IsDBNull(reader.GetOrdinal("is_blocked")) ? (bool?)null : reader.GetBoolean(reader.GetOrdinal("is_blocked")),
+                                batch_id = reader.IsDBNull(reader.GetOrdinal("batch_id")) ? 0 : reader.GetInt32(reader.GetOrdinal("batch_id")),
+                                batch = reader.IsDBNull(reader.GetOrdinal("batch")) ? string.Empty : reader.GetString(reader.GetOrdinal("batch")),
+                                course_id = reader.IsDBNull(reader.GetOrdinal("courseid")) ? 0 : reader.GetInt32(reader.GetOrdinal("courseid")),
+                                status = reader.IsDBNull(reader.GetOrdinal("status")) ? null : reader.GetString(reader.GetOrdinal("status"))
+                            };
+
+                            students.Add(student);
+                        }
+                    }
+                }
+            }
+
+            return students;
+        }
+
+        public IEnumerable<Student> GetAllStudentsWithPhoto(int ano, int status)
+        {
+            List<Student> students = new List<Student>();
+
+            string sqlQuery = "";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                if (status == 1)
+                {
+                    sqlQuery = @$"SELECT 
+                        TABALUNOS.NUMALUNO AS User_id, 
+                        CINUMERO AS UserName,
+                        TABALUNOS.NOME AS Full_name,
+                        LEFT(TABALUNOS.NOME, CHARINDEX(' ', TABALUNOS.NOME + ' ') - 1) AS first_name,
+                        RIGHT(TABALUNOS.NOME, CHARINDEX(' ', REVERSE(TABALUNOS.NOME)) - 1) AS last_name,
+                        EMAIL,
+                        CASE 
+                            WHEN SEXO = 1 THEN 'Masculine' 
+                            WHEN SEXO = 0 THEN 'Feminine' 
+                            ELSE 'Not informed' 
+                        END AS gender,
+                        FOTO AS user_photo,
+                        BAIRRO AS neighborhood,
+                        MORADA AS address,
+                        MUNICIPIO AS municipality,
+                        COMUNA AS commune,
+                        DATANASC AS date_of_birth,
+                        OIEMAILMAE AS mother_email,
+                        OINOMEMAE AS mother_name,
+                        OITELFMAE AS mother_phone,
+                        OIEMAILPAI AS father_email,
+                        OINOMEPAI AS father_name,
+                        OITELFPAI AS father_phone,
+                        TABCLASSES.NOME AS class,
+                        TABTURMAS.IDTURMA AS batch_id,
+                        TABTURMAS.NOME AS batch,
+                        CartaoAluno.Bloqueado AS is_blocked,
+						TABTURMAS.IDCLASSE AS courseid,
+                        TABSTATUS.NOME AS status
+                    FROM TABALUNOS
+                        LEFT JOIN TABMATRICULAS 
+                            ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
+                            AND TABMATRICULAS.IDANOLECTIVO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                        LEFT JOIN TABTURMAS 
+                            ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA
+                        LEFT JOIN TABCLASSES 
+                            ON TABCLASSES.IDCLASSE = TABTURMAS.IDCLASSE
+                        LEFT JOIN CartaoAluno 
+                            ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
+                        JOIN TABSTATUS 
+                            ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
+                    WHERE TABMATRICULAS.IDALUNO IS NULL
+                    ORDER BY TABALUNOS.NUMALUNO ASC;
+                    ";
+                }
+                else
+                {
+
+
+                    if (ano == 2025)
+                    {
+                        sqlQuery = @$"SELECT 
+                        TABALUNOS.NUMALUNO AS User_id, 
+                        CINUMERO AS UserName,
+                        TABALUNOS.NOME AS Full_name,
+                        LEFT(TABALUNOS.NOME, CHARINDEX(' ', TABALUNOS.NOME + ' ') - 1) AS first_name,
+                        RIGHT(TABALUNOS.NOME, CHARINDEX(' ', REVERSE(TABALUNOS.NOME)) - 1) AS last_name,
+                        EMAIL,
+                        CASE 
+                            WHEN SEXO = 1 THEN 'Masculine' 
+                            WHEN SEXO = 0 THEN 'Feminine' 
+                            ELSE 'Not informed' 
+                        END AS gender,
+                        FOTO AS user_photo,
+                        BAIRRO AS neighborhood,
+                        MORADA AS address,
+                        MUNICIPIO AS municipality,
+                        COMUNA AS commune,
+                        DATANASC AS date_of_birth,
+                        OIEMAILMAE AS mother_email,
+                        OINOMEMAE AS mother_name,
+                        OITELFMAE AS mother_phone,
+                        OIEMAILPAI AS father_email,
+                        OINOMEPAI AS father_name,
+                        OITELFPAI AS father_phone,
+                        TABCLASSES.NOME AS class,
+                        TABTURMAS.IDTURMA AS batch_id,
+                        TABTURMAS.NOME AS batch,
+                        CartaoAluno.Bloqueado AS is_blocked,
+						TABTURMAS.IDCLASSE AS courseid,
+                        TABSTATUS.NOME AS status
+                    FROM TABALUNOS
+                        LEFT JOIN TABMATRICULAS 
+                            ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
+                            AND TABMATRICULAS.IDANOLECTIVO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                        LEFT JOIN TABTURMAS 
+                            ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA
+                        LEFT JOIN TABCLASSES 
+                            ON TABCLASSES.IDCLASSE = TABTURMAS.IDCLASSE
+                        LEFT JOIN CartaoAluno 
+                            ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
+                        JOIN TABSTATUS 
+                            ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
+                            AND TABMATRICULAS.IDSTATUS = {status}
+                                        ORDER BY TABALUNOS.NUMALUNO ASC";
+                    }
+                    else if (ano > 2025){
+                        sqlQuery = @$"SELECT 
+                        TABALUNOS.NUMALUNO AS User_id, 
+                        CINUMERO AS UserName,
+                        TABALUNOS.NOME AS Full_name,
+                        LEFT(TABALUNOS.NOME, CHARINDEX(' ', TABALUNOS.NOME + ' ') - 1) AS first_name,
+                        RIGHT(TABALUNOS.NOME, CHARINDEX(' ', REVERSE(TABALUNOS.NOME)) - 1) AS last_name,
+                        EMAIL,
+                        CASE 
+                            WHEN SEXO = 1 THEN 'Masculine' 
+                            WHEN SEXO = 0 THEN 'Feminine' 
+                            ELSE 'Not informed' 
+                        END AS gender,
+                        FOTO AS user_photo,
+                        BAIRRO AS neighborhood,
+                        MORADA AS address,
+                        MUNICIPIO AS municipality,
+                        COMUNA AS commune,
+                        DATANASC AS date_of_birth,
+                        OIEMAILMAE AS mother_email,
+                        OINOMEMAE AS mother_name,
+                        OITELFMAE AS mother_phone,
+                        OIEMAILPAI AS father_email,
+                        OINOMEPAI AS father_name,
+                        OITELFPAI AS father_phone,
+                        TABCLASSES.NOME AS class,
+                        TABTURMAS.IDTURMA AS batch_id,
+                        TABTURMAS.NOME AS batch,
+                        CartaoAluno.Bloqueado AS is_blocked,
+						CASE cla_ant.IDCLASSE
+                            WHEN 17 THEN 4
+                            WHEN 4  THEN 3
+                            WHEN 3  THEN 2
+                            WHEN 2  THEN 1 
+                        ELSE cla_ant.IDCLASSE
+                        END AS courseid,
+                        TABSTATUS.NOME AS status
+                    FROM TABALUNOS
+                        LEFT JOIN TABMATRICULAS 
+                            ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
+                            AND TABMATRICULAS.IDANOLECTIVO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                        LEFT JOIN TABTURMAS 
+                            ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA
+                        LEFT JOIN TABCLASSES 
+                            ON TABCLASSES.IDCLASSE = TABTURMAS.IDCLASSE
+                        LEFT JOIN CartaoAluno 
+                            ON CartaoAluno.IdAluno = TABALUNOS.IDALUNO
+                        JOIN TABSTATUS 
+                            ON TABSTATUS.IDSTATUS = TABALUNOS.IDSTATUS
+						        JOIN
+                    TABCLASSES AS cla_atu ON TABTURMAS.IDCLASSE = cla_atu.IDCLASSE
+                JOIN
+                    TABCLASSES AS cla_ant ON
+                        LOWER(cla_ant.NOME) =
+                        CASE LOWER(cla_atu.NOME)
+                            WHEN 'jk' THEN 'junior kindergarten'
+                            WHEN 'sk' THEN 'senior kindergarten'
+			                 WHEN 'TOODLERS' THEN 'Toddlers'
+                            ELSE LOWER(cla_atu.NOME)
+                        END
+                WHERE
+                    cla_atu.IDANO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = {ano})
+                    AND cla_ant.IDANO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO =  {ano} - 1)
+                                                                AND TABMATRICULAS.IDSTATUS = {status}
+                                    ORDER BY TABALUNOS.NUMALUNO ASC";
+                    }
+                   
+                }
+               
+                
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
                 {
                     using (SqlDataReader reader = cmd.ExecuteReader())
@@ -212,9 +771,10 @@ namespace SistemasdeTarefas.Repository
                                 FatherName = reader.IsDBNull(reader.GetOrdinal("father_name")) ? null : reader.GetString(reader.GetOrdinal("father_name")),
                                 FatherPhone = reader.IsDBNull(reader.GetOrdinal("father_phone")) ? null : reader.GetString(reader.GetOrdinal("father_phone")),
                                 Class = reader.IsDBNull(reader.GetOrdinal("class")) ? string.Empty : reader.GetString(reader.GetOrdinal("class")),
-                         IsBlocked = reader.IsDBNull(reader.GetOrdinal("is_blocked"))? (bool?)null: reader.GetBoolean(reader.GetOrdinal("is_blocked")),
+                                IsBlocked = reader.IsDBNull(reader.GetOrdinal("is_blocked")) ? (bool?)null : reader.GetBoolean(reader.GetOrdinal("is_blocked")),
                                 batch_id = reader.IsDBNull(reader.GetOrdinal("batch_id")) ? 0 : reader.GetInt32(reader.GetOrdinal("batch_id")),
                                 batch = reader.IsDBNull(reader.GetOrdinal("batch")) ? string.Empty : reader.GetString(reader.GetOrdinal("batch")),
+                                course_id = reader.IsDBNull(reader.GetOrdinal("courseid")) ? 0 : reader.GetInt32(reader.GetOrdinal("courseid")),
                                 status = reader.IsDBNull(reader.GetOrdinal("status")) ? null : reader.GetString(reader.GetOrdinal("status"))
                             };
 
@@ -226,6 +786,7 @@ namespace SistemasdeTarefas.Repository
 
             return students;
         }
+
         public IEnumerable<TabAluno> GetAlunos()
         {
             List<TabAluno> alunos = new List<TabAluno>();
@@ -302,7 +863,6 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-
         public IEnumerable<Existencia_Card> GetAlunosSemFotos()
         {
             List<Existencia_Card> alunos = new List<Existencia_Card>();
@@ -340,7 +900,6 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-
         public IEnumerable<Existencia_Card> GetAlunosSemFotosFiltro(int? idclasse = null, int? idturma = null)
         {
             List<Existencia_Card> alunos = new List<Existencia_Card>();
@@ -382,7 +941,6 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-
         public IEnumerable<Classes> GetClasses()
         {
             List<Classes> classes = new List<Classes>();
@@ -416,6 +974,41 @@ namespace SistemasdeTarefas.Repository
 
             return classes;
         }
+
+        public IEnumerable<StudentCount> GetCoutnAllStudentByYear(int ano, int status)
+        {
+            var students = new List<StudentCount>();
+
+            string sqlQuery = @"
+                    SELECT COUNT(*) AS TOTALMATRICULA, TABANOSLECTIVOS.ANO 
+                    FROM TABMATRICULAS 
+                    JOIN TABANOSLECTIVOS ON TABANOSLECTIVOS.IDANO = TABMATRICULAS.IDANOLECTIVO
+                    WHERE TABMATRICULAS.IDANOLECTIVO = (SELECT IDANO FROM TABANOSLECTIVOS WHERE ANO = @Ano) AND TABMATRICULAS.IDSTATUS = @Status
+                    GROUP BY TABANOSLECTIVOS.ANO
+                ";
+
+            using var connection = new SqlConnection(_connectionString);
+            using var cmd = new SqlCommand(sqlQuery, connection);
+
+            cmd.Parameters.AddWithValue("@Ano", ano);
+            cmd.Parameters.AddWithValue("@Status", status);
+
+            connection.Open();
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var student = new StudentCount
+                {
+                    Count = reader["TOTALMATRICULA"] as int? ?? 0,
+                    Year = reader["ANO"] as int? ?? 0
+                };
+                students.Add(student);
+            }
+
+            return students;
+        }
+
         public IEnumerable<Turmas> GetTurmas(int classe)
         {
             List<Turmas> turmas = new List<Turmas>();

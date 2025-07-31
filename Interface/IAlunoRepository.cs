@@ -7,6 +7,9 @@ namespace SistemasdeTarefas.Interface
        
         IEnumerable<TabAluno> GetAlunos();
         IEnumerable<Student> GetAllStudents(int ano, int status);
+        IEnumerable<Student> GetAllStudentsWithPhoto(int ano, int status);
+        IEnumerable<Student> GetAllStudentsConfirmationORMatriculation(int ano, int status);
+        IEnumerable<StudentCount> GetCoutnAllStudentByYear(int ano, int status);
         IEnumerable<Class> GetAllClass(int ano);
         IEnumerable<Existencia_Card> GetAlunosSemFotos();
         IEnumerable<Existencia_Card> GetAlunosSemFotosFiltro(int? idclasse = null, int? idturma = null);
