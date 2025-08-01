@@ -863,6 +863,63 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
+
+        public IEnumerable<Existencia_Card> GetAlunosPorNumeroTelefonePai(int numeroTelefone)
+        {
+            List<Existencia_Card> classes = new List<Existencia_Card>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                string sqlQuery = @$"SSELECT 
+                                        TABALUNOS.FOTO, 
+                                        TABALUNOS.IDALUNO, 
+                                        NUMALUNO, 
+                                        TABALUNOS.NOME AS [ALUNO], 
+                                        TABTURMAS.NOME AS [NomeTurma], 
+                                        IDANOLECTIVO
+                                    FROM 
+                                        TABALUNOS 
+                                        INNER JOIN TABMATRICULAS ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
+                                        INNER JOIN TABTURMAS ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA    
+                                        INNER JOIN TABSTATUS s ON TABALUNOS.IDSTATUS = s.IDSTATUS 
+                                    WHERE 
+                                        TABALUNOS.INACTIVO = 0 
+                                        AND TABMATRICULAS.IDSTATUS IN (2, 4) 
+                                        AND TABTURMAS.NOME NOT IN ('FUNCIONÁRIO', 'DOCENTE')
+                                        AND TABMATRICULAS.IDANOLECTIVO = (SELECT MAX(IDANO) FROM TABANOSLECTIVOS)
+                                        AND (
+                                            OITELFPAI = '{numeroTelefone}' 
+                                            OR OITELFMAE = '{numeroTelefone}' 
+                                            OR OITELFENCARG = '{numeroTelefone}'
+                                        )
+                                        AND UsaAppSync = 1
+                                    ";
+
+                                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Existencia_Card classe = new Existencia_Card
+                            {
+                                Nome = reader.GetString(3),
+                                NomeTurma = reader.GetString(4),
+                                NumAluno = reader.GetInt32(2),
+                                Foto = reader.IsDBNull(0) ? null : (byte[])reader.GetValue(0)
+                            };
+
+                            classes.Add(classe);
+                        }
+                    }
+                }
+            }
+
+            return classes;
+        }
+
         public IEnumerable<Existencia_Card> GetAlunosSemFotos()
         {
             List<Existencia_Card> alunos = new List<Existencia_Card>();

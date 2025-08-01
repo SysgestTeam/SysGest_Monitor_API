@@ -14,6 +14,7 @@ namespace SistemasdeTarefas.Interface
         IEnumerable<Existencia_Card> GetAlunosSemFotos();
         IEnumerable<Existencia_Card> GetAlunosSemFotosFiltro(int? idclasse = null, int? idturma = null);
         IEnumerable<TabAluno> GetAlunosFiltro(int? idclasse  = null, int? idturma = null);
+        IEnumerable<Existencia_Card> GetAlunosPorNumeroTelefonePai(int numeroTelefone);
         IEnumerable<Turmas> GetTurmas(int classe);
         IEnumerable<Classes> GetClasses();
     }

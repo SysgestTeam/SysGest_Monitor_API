@@ -103,4 +103,12 @@ public class AlunoController : ControllerBase
         var turmas = _alunoRepository.GetTurmas(classe);
         return turmas;
     }
+
+
+    [HttpGet("getaluno-numero-encarregado")]
+    public IEnumerable<Existencia_Card> GetAlunosPorNumero(int numero)
+    {
+        var alunos = _alunoRepository.GetAlunosPorNumeroTelefonePai(numero);
+        return alunos;
+    }
 }
