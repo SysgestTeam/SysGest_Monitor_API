@@ -4,19 +4,143 @@ using System.Data.SqlClient;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
+using System.Security.Cryptography;
+using SistemasdeTarefas.Service;
+using System.Net.Http;
 
 namespace SistemasdeTarefas.Repository
 {
     public class loginRepository : IloginRepository
     {
-
         private readonly string _connectionString;
-
-        public loginRepository(IConfiguration configuration)
+        private readonly IAlunoRepository _alunoRepository;
+        private readonly HttpClient _httpClient;
+        public loginRepository(IConfiguration configuration, IAlunoRepository alunoRepository)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
+            _alunoRepository = alunoRepository;
+            _httpClient = new HttpClient();
         }
+        public void CriarSenhaParaPai(string numero, string senha)
+        {
+            string senhaEncriptada = CryptoHelper.Encriptar(senha);
 
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+
+                // Primeiro: verificar se o número existe
+                string sqlVerifica = "SELECT 1 FROM TABLOGINPAIS WHERE NumeroTelefone = @numero";
+
+                using (SqlCommand cmdVerifica = new SqlCommand(sqlVerifica, conn))
+                {
+                    cmdVerifica.Parameters.AddWithValue("@numero", numero);
+                    var resultado = cmdVerifica.ExecuteScalar();
+
+                    if (resultado == null)
+                    {
+                        throw new Exception("Número de telefone não encontrado no sistema.");
+                    }
+                }
+
+                // Segundo: atualizar a senha
+                string sqlUpdate = @"
+                        UPDATE TABLOGINPAIS
+                        SET Senha = @senha, DataAlteracao = GETDATE()
+                        WHERE NumeroTelefone = @numero";
+
+                using (SqlCommand cmdUpdate = new SqlCommand(sqlUpdate, conn))
+                {
+                    cmdUpdate.Parameters.AddWithValue("@senha", senhaEncriptada);
+                    cmdUpdate.Parameters.AddWithValue("@numero", numero);
+                    cmdUpdate.ExecuteNonQuery();
+                }
+            }
+        }
+        public string ObterSenhaDesencriptada(string numero)
+        {
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+
+                string sql = "SELECT Senha FROM TABLOGINPAIS WHERE NumeroTelefone = @numero";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@numero", numero);
+                    string senhaEncriptada = cmd.ExecuteScalar()?.ToString();
+
+                    if (string.IsNullOrEmpty(senhaEncriptada))
+                        return null;
+
+                    return CryptoHelper.Desencriptar(senhaEncriptada);
+                }
+            }
+        }
+        public string ValidarCodigoVerificacao(int numeroTelefone, string codigoRecebido)
+        {
+            string resultadoValidacao = null;
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                string sqlQuery = @"
+                        DECLARE @Numero VARCHAR(20) = @NumeroTelefone;
+                        DECLARE @Codigo NVARCHAR(6) = @CodigoRecebido;
+                        DECLARE @CodigoArmazenado NVARCHAR(6);
+                        DECLARE @Expira DATETIME;
+                        DECLARE @Resultado NVARCHAR(50);
+
+                        SELECT 
+                            @CodigoArmazenado = CodigoVerificacao,
+                            @Expira = CodigoExpira
+                        FROM TABLOGINPAIS
+                        WHERE NumeroTelefone = @Numero;
+
+                        IF @CodigoArmazenado IS NULL
+                        BEGIN
+                            SET @Resultado = 'Número não registado';
+                        END
+                        ELSE IF @Expira < GETDATE()
+                        BEGIN
+                            SET @Resultado = 'Código expirado';
+                        END
+                        ELSE IF @CodigoArmazenado = @Codigo
+                        BEGIN
+                            SET @Resultado = 'Código válido';
+
+                            -- Opcional: invalidar o código após uso
+                            UPDATE [TABLOGINPAIS]
+                            SET CodigoVerificacao = NULL, CodigoExpira = NULL
+                            WHERE NumeroTelefone = @Numero;
+                        END
+                        ELSE
+                        BEGIN
+                            SET @Resultado = 'Código incorreto';
+                        END
+
+                        SELECT @Resultado AS ResultadoValidacao;
+                 ";
+
+                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
+                {
+                    cmd.Parameters.AddWithValue("@NumeroTelefone", numeroTelefone.ToString());
+                    cmd.Parameters.AddWithValue("@CodigoRecebido", codigoRecebido);
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            resultadoValidacao = reader["ResultadoValidacao"].ToString();
+                        }
+                    }
+                }
+            }
+
+            return resultadoValidacao;
+        }
         public string GenerateJwtToken(string username)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("ChaveSuperSecreta12345678901234567890"));
@@ -37,7 +161,121 @@ namespace SistemasdeTarefas.Repository
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+        public async Task<int> GerarNumerode6DigitosParaosPais(string nome, string numero, string email)
+        {
+            if (string.IsNullOrWhiteSpace(nome))
+                throw new Exception("Nome é obrigatório.");
 
+            if (string.IsNullOrWhiteSpace(numero))
+                throw new Exception("Número de telefone é obrigatório.");
+
+            numero = numero.Replace(" ", "").Trim();
+            int codigo = 0;
+            bool podeEnviarSms = false;
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                {
+                    await connection.OpenAsync();
+
+                    string sqlCheck = @"
+                SELECT 1
+                FROM 
+                    TABALUNOS 
+                    INNER JOIN TABMATRICULAS ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
+                    INNER JOIN TABTURMAS ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA    
+                    INNER JOIN TABSTATUS s ON TABALUNOS.IDSTATUS = s.IDSTATUS 
+                WHERE 
+                    TABALUNOS.INACTIVO = 0 
+                    AND TABMATRICULAS.IDSTATUS IN (2, 4) 
+                    AND TABTURMAS.NOME NOT IN ('FUNCIONÁRIO', 'DOCENTE')
+                    AND TABMATRICULAS.IDANOLECTIVO = (SELECT MAX(IDANO) FROM TABANOSLECTIVOS)
+                    AND (
+                        OITELFPAI = @NumeroTelefone 
+                        OR OITELFMAE = @NumeroTelefone 
+                        OR OITELFENCARG = @NumeroTelefone
+                    )
+                    AND UsaAppSync = 1";
+
+                    bool numeroExiste;
+                    using (SqlCommand cmd = new SqlCommand(sqlCheck, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@NumeroTelefone", numero);
+                        var result = await cmd.ExecuteScalarAsync();
+                        numeroExiste = result != null;
+                    }
+
+                    if (!numeroExiste)
+                        return 0; // <- Número não associado a aluno válido, retorna 0
+
+                    // Agora sim gera o código
+                    codigo = new Random().Next(100000, 999999);
+
+                    string sqlUpsert = @"
+                IF EXISTS (SELECT 1 FROM TABLOGINPAIS WHERE NumeroTelefone = @Numero)
+                BEGIN
+                    UPDATE TABLOGINPAIS
+                    SET Nome = @Nome,
+                        Email = @Email,
+                        CodigoVerificacao = @Codigo,
+                        CodigoExpira = DATEADD(MINUTE, 5, GETDATE()),
+                        DataAlteracao = GETDATE()
+                    WHERE NumeroTelefone = @Numero;
+                END
+                ELSE
+                BEGIN
+                    INSERT INTO TABLOGINPAIS (Nome, NumeroTelefone, Email, CodigoVerificacao, CodigoExpira, DataRegistada)
+                    VALUES (@Nome, @Numero, @Email, @Codigo, DATEADD(MINUTE, 5, GETDATE()), GETDATE());
+                END";
+
+                    using (SqlCommand cmd = new SqlCommand(sqlUpsert, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Nome", nome);
+                        cmd.Parameters.AddWithValue("@Numero", numero);
+                        cmd.Parameters.AddWithValue("@Email", (object)email ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Codigo", codigo.ToString());
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    podeEnviarSms = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERRO SMS] {ex.Message}");
+                return -1; // <- erro inesperado
+            }
+            finally
+            {
+                if (podeEnviarSms && codigo > 0)
+                {
+                    await EnviarSmsAsync(nome, numero, codigo);
+                }
+            }
+
+            return codigo; // <- só retorna o código se tudo correu bem
+        }
+        private async Task EnviarSmsAsync(string nome, string numero, int codigo)
+        {
+            var payload = new
+            {
+                ApiKey = "91fb607ed69b43d2b3919dc922da3a8aab87345baded4ffcb917236b5bef6eb9", 
+                Destino = new[] { numero },
+                Mensagem = $"Olá, {nome}. O seu código é: {codigo}",
+                CEspeciais = true
+            };
+
+            string json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("https://api.wesender.co.ao/envio/apikey", content);
+            if (!response.IsSuccessStatusCode)
+            {
+                var responseBody = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Erro SMS: {response.StatusCode}, Detalhes: {responseBody}");
+            }
+        }
         public string login(string user, string senha)
         {
             string resultadoLogin = null;
@@ -55,27 +293,27 @@ namespace SistemasdeTarefas.Repository
                     DECLARE @PassHSInserido VARBINARY(64);
                     DECLARE @Resultado NVARCHAR(50);
 
-            -- Busca Salt e Hash armazenados para o usuário
-            SELECT 
-                @SaltPW = CAST(SaltPW AS NVARCHAR(36)), 
-                @PassHSArmazenado = PassHS
-            FROM [TABUSER]
-            WHERE [USERLOGIN] = @UserLogin;
+                    -- Busca Salt e Hash armazenados para o usuário
+                    SELECT 
+                        @SaltPW = CAST(SaltPW AS NVARCHAR(36)), 
+                        @PassHSArmazenado = PassHS
+                    FROM [TABUSER]
+                    WHERE [USERLOGIN] = @UserLogin;
 
-            -- Verificação da senha
-            IF @SaltPW IS NOT NULL AND @PassHSArmazenado IS NOT NULL
-            BEGIN
-                SET @PassHSInserido = HASHBYTES('SHA2_512', @Password + @SaltPW);
+                    -- Verificação da senha
+                    IF @SaltPW IS NOT NULL AND @PassHSArmazenado IS NOT NULL
+                    BEGIN
+                        SET @PassHSInserido = HASHBYTES('SHA2_512', @Password + @SaltPW);
 
-                IF @PassHSInserido = @PassHSArmazenado
-                    SET @Resultado = 'Usuário e senha corretos';
-                ELSE
-                    SET @Resultado = 'Senha incorreta';
-            END
-            ELSE
-                SET @Resultado = 'Usuário não encontrado';
+                        IF @PassHSInserido = @PassHSArmazenado
+                            SET @Resultado = 'Usuário e senha corretos';
+                        ELSE
+                            SET @Resultado = 'Senha incorreta';
+                    END
+                    ELSE
+                        SET @Resultado = 'Usuário não encontrado';
 
-            SELECT @Resultado AS ResultadoLogin;
+                    SELECT @Resultado AS ResultadoLogin;
         ";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
