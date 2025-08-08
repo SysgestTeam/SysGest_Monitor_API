@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Security.Cryptography;
 using SistemasdeTarefas.Service;
 using System.Net.Http;
+using SistemasdeTarefas.Models;
 
 namespace SistemasdeTarefas.Repository
 {
@@ -58,25 +59,42 @@ namespace SistemasdeTarefas.Repository
                 }
             }
         }
-        public string ObterSenhaDesencriptada(string numero)
+        public IEnumerable<Login> ObterSenhaDesencriptada(string numeroTelefone)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
                 conn.Open();
 
-                string sql = "SELECT Senha FROM TABLOGINPAIS WHERE NumeroTelefone = @numero";
+                string sql = "SELECT Senha, Nome FROM TABLOGINPAIS WHERE NumeroTelefone = @numero";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
-                    cmd.Parameters.AddWithValue("@numero", numero);
-                    string senhaEncriptada = cmd.ExecuteScalar()?.ToString();
+                    cmd.Parameters.AddWithValue("@numero", numeroTelefone);
 
-                    if (string.IsNullOrEmpty(senhaEncriptada))
-                        return null;
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            string senhaEncriptada = reader["Senha"].ToString();
+                            string nome = reader["Nome"].ToString();
 
-                    return CryptoHelper.Desencriptar(senhaEncriptada);
+                            string senhaDesencriptada = CryptoHelper.Desencriptar(senhaEncriptada);
+
+                            return new List<Login>
+                    {
+                        new Login
+                        {
+                            user = nome,
+                            numero = numeroTelefone,
+                            senha = senhaDesencriptada
+                        }
+                    };
+                        }
+                    }
                 }
             }
+
+            return Enumerable.Empty<Login>();
         }
         public string ValidarCodigoVerificacao(int numeroTelefone, string codigoRecebido)
         {

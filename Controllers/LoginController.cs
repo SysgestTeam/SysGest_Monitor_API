@@ -161,7 +161,7 @@ public class LoginController : ControllerBase
     {
         try
         {
-            string resultado = _loginRepository.ObterSenhaDesencriptada(numeroTelefone);
+            IEnumerable<Login> resultado = _loginRepository.ObterSenhaDesencriptada(numeroTelefone);
 
             return Ok(new { resultado });
         }
