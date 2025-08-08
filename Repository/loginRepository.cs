@@ -274,6 +274,96 @@ namespace SistemasdeTarefas.Repository
 
             return codigo; // <- só retorna o código se tudo correu bem
         }
+        public async Task<int> GerarCodigoRecuperacaoSenhaAsync(string numero)
+        {
+            if (string.IsNullOrWhiteSpace(numero))
+                throw new Exception("Número de telefone é obrigatório.");
+
+            numero = numero.Replace(" ", "").Trim();
+            int codigo = 0;
+            bool podeEnviarSms = false;
+            string nome = "Responsável"; // valor padrão, caso não seja encontrado
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                {
+                    await connection.OpenAsync();
+
+                    string sqlCheck = @"
+                SELECT Nome 
+                FROM TABLOGINPAIS 
+                WHERE NumeroTelefone = @Numero";
+
+                    using (SqlCommand cmd = new SqlCommand(sqlCheck, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Numero", numero);
+                        var result = await cmd.ExecuteScalarAsync();
+
+                        if (result == null)
+                            return 0; // Número não encontrado, nenhum código será enviado
+
+                        nome = result?.ToString() ?? "Responsável";
+                    }
+
+                    // Gera o código aleatório de 6 dígitos
+                    codigo = new Random().Next(100000, 999999);
+
+                    string sqlUpdate = @"
+                UPDATE TABLOGINPAIS
+                SET CodigoVerificacao = @Codigo,
+                    CodigoExpira = DATEADD(MINUTE, 5, GETDATE()),
+                    DataAlteracao = GETDATE()
+                WHERE NumeroTelefone = @Numero";
+
+                    using (SqlCommand cmd = new SqlCommand(sqlUpdate, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Numero", numero);
+                        cmd.Parameters.AddWithValue("@Codigo", codigo.ToString());
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    podeEnviarSms = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERRO RECUPERACAO] {ex.Message}");
+                return -1;
+            }
+            finally
+            {
+                if (podeEnviarSms && codigo > 0)
+                {
+                    await EnviarSmsAsyncRe(nome, numero, codigo); // agora usa o nome real
+                }
+            }
+
+            return codigo;
+        }
+
+        private async Task EnviarSmsAsyncRe(string nome, string numero, int codigo)
+        {
+            var payload = new
+            {
+                ApiKey = "91fb607ed69b43d2b3919dc922da3a8aab87345baded4ffcb917236b5bef6eb9",
+                Destino = new[] { numero },
+                Mensagem = $"Olá, {nome}. Use este código para recuperar o acesso à sua conta: {codigo}. O código expira em 5 minutos.",
+                CEspeciais = true
+            };
+
+            string json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("https://api.wesender.co.ao/envio/apikey", content);
+            if (!response.IsSuccessStatusCode)
+            {
+                var responseBody = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Erro SMS: {response.StatusCode}, Detalhes: {responseBody}");
+            }
+        }
+
+
         private async Task EnviarSmsAsync(string nome, string numero, int codigo)
         {
             var payload = new

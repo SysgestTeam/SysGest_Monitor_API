@@ -878,7 +878,8 @@ namespace SistemasdeTarefas.Repository
                                                 TABALUNOS.IDALUNO, 
                                                 NUMALUNO, 
                                                 TABALUNOS.NOME AS ALUNO, 
-                                                TABTURMAS.NOME AS NomeTurma, 
+                                                TABTURMAS.NOME AS NomeTurma,                               
+                                                TABALUNOS.LimiteSaldoDia, 
                                                 IDANOLECTIVO
                                             FROM 
                                                 TABALUNOS 
@@ -918,7 +919,8 @@ namespace SistemasdeTarefas.Repository
                                                         WHERE idaluno = Matriculados.IDALUNO 
                                                             AND Anulado = 0 
                                                             AND Deleted = 0
-                                                    ), 0)
+                                                    ), 0),
+													LimiteSaldoDia
                                         FROM 
                                              Matriculados
                                         LEFT JOIN 

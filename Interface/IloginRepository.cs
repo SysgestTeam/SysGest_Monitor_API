@@ -8,6 +8,7 @@ namespace SistemasdeTarefas.Interface
         public Task<int> GerarNumerode6DigitosParaosPais(string nome, string numero, string email);
         public void CriarSenhaParaPai(string numero, string senha);
         public IEnumerable<Login> ObterSenhaDesencriptada(string numeroTelefone);
+        public  Task<int> GerarCodigoRecuperacaoSenhaAsync(string numero);
         public string ValidarCodigoVerificacao(int numeroTelefone, string codigoRecebido);
         public string GenerateJwtToken(string username); 
 

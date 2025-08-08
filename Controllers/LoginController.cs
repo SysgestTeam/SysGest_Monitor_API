@@ -172,4 +172,28 @@ public class LoginController : ControllerBase
     }
 
 
+    [HttpPost("recuperar-senha")]
+    [EnableCors("AllowAll")]
+    public async Task<IActionResult> Recuperar(string numeroTelefone)
+    {
+        try
+        {
+            int codigo = await _loginRepository.GerarCodigoRecuperacaoSenhaAsync(numeroTelefone);
+
+            if (codigo == 0)
+                return NotFound(new { Mensagem = "Número de telefone não encontrado ou não autorizado a recuperar a senha." });
+
+            if (codigo == -1)
+                return StatusCode(500, new { Mensagem = "Ocorreu um erro interno ao gerar o código." });
+
+            return Ok(new { CodigoEnviado = true });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Erro = ex.Message });
+        }
+    }
+
+
+
 }
