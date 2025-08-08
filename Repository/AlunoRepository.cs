@@ -971,16 +971,15 @@ namespace SistemasdeTarefas.Repository
                         {
                             Existencia_Card aluno = new Existencia_Card
                             {
-                                // Mapeie as colunas do resultado para o objeto TabAluno
                                 Nome = reader.GetString(3),
                                 NomeTurma = reader.GetString(4),
                                 NumAluno = reader.GetInt32(2),
-                                Foto = reader.IsDBNull(0) ? null : (byte[])reader.GetValue(0) // Verifica se a coluna é DBNull
+                                Foto = reader.IsDBNull(0) ? null : (byte[])reader.GetValue(0) 
                             };
                             if (reader["foto"] != DBNull.Value)
                             {
                                 aluno.Foto = (byte[])reader.GetValue(0);
-                            }
+                            }   
 
                             alunos.Add(aluno);
                         }
