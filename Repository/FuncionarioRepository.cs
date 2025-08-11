@@ -12,7 +12,6 @@ namespace SistemasdeTarefas.Repository
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
-
         public IEnumerable<Funcionario> GetAll()
         {
             List<Funcionario> funcionarios = new List<Funcionario>();
@@ -50,7 +49,6 @@ namespace SistemasdeTarefas.Repository
 
             return funcionarios;
         }
-
         public IEnumerable<Funcionario> GetComCartao()
         {
             List<Funcionario> funcionarios = new List<Funcionario>();
@@ -95,7 +93,6 @@ namespace SistemasdeTarefas.Repository
 
             return funcionarios;
         }
-
         public IEnumerable<Funcionario> GetFuncionarioComFotos()
         {
             List<Funcionario> funcionarios = new List<Funcionario>();
@@ -132,7 +129,6 @@ namespace SistemasdeTarefas.Repository
 
             return funcionarios;
         }
-
         public IEnumerable<Funcionario> GetFuncionarioSemFoto()
         {
             List<Funcionario> funcionarios = new List<Funcionario>();
@@ -169,7 +165,6 @@ namespace SistemasdeTarefas.Repository
 
             return funcionarios;
         }
-
         public IEnumerable<Funcionario> GetSemCartao()
         {
             List<Funcionario> funcionarios = new List<Funcionario>();

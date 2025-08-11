@@ -12,7 +12,6 @@ namespace SistemasdeTarefas.Repository
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
-
         public IEnumerable<Class> GetAllClass(int ano)
         {
             var classesDict = new Dictionary<int, Class>();
@@ -343,7 +342,6 @@ namespace SistemasdeTarefas.Repository
 
             return students;
         }
-
         public IEnumerable<Student> GetAllStudentsConfirmationORMatriculation(int ano, int status)
         {
             List<Student> students = new List<Student>();
@@ -549,7 +547,6 @@ namespace SistemasdeTarefas.Repository
 
             return students;
         }
-
         public IEnumerable<Student> GetAllStudentsWithPhoto(int ano, int status)
         {
             List<Student> students = new List<Student>();
@@ -727,8 +724,7 @@ namespace SistemasdeTarefas.Repository
                     }
                    
                 }
-               
-                
+
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
                 {
                     using (SqlDataReader reader = cmd.ExecuteReader())
@@ -786,7 +782,6 @@ namespace SistemasdeTarefas.Repository
 
             return students;
         }
-
         public IEnumerable<TabAluno> GetAlunos()
         {
             List<TabAluno> alunos = new List<TabAluno>();
@@ -863,7 +858,6 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-
         public IEnumerable<Existencia_Card> GetAlunosPorNumeroTelefonePai(int numeroTelefone)
         {
             List<Existencia_Card> classes = new List<Existencia_Card>();
@@ -955,7 +949,6 @@ namespace SistemasdeTarefas.Repository
 
             return classes;
         }
-
         public IEnumerable<Existencia_Card> GetAlunosSemFotos()
         {
             List<Existencia_Card> alunos = new List<Existencia_Card>();
@@ -1066,7 +1059,6 @@ namespace SistemasdeTarefas.Repository
 
             return classes;
         }
-
         public IEnumerable<StudentCount> GetCoutnAllStudentByYear(int ano, int status)
         {
             var students = new List<StudentCount>();
@@ -1100,7 +1092,6 @@ namespace SistemasdeTarefas.Repository
 
             return students;
         }
-
         public IEnumerable<Turmas> GetTurmas(int classe)
         {
             List<Turmas> turmas = new List<Turmas>();

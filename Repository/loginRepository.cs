@@ -15,11 +15,13 @@ namespace SistemasdeTarefas.Repository
     public class loginRepository : IloginRepository
     {
         private readonly string _connectionString;
+        private readonly string _ApiKey;
         private readonly IAlunoRepository _alunoRepository;
         private readonly HttpClient _httpClient;
         public loginRepository(IConfiguration configuration, IAlunoRepository alunoRepository)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
+            _ApiKey = configuration.GetConnectionString("ApiKey");
             _alunoRepository = alunoRepository;
             _httpClient = new HttpClient();
         }
@@ -341,12 +343,11 @@ namespace SistemasdeTarefas.Repository
 
             return codigo;
         }
-
         private async Task EnviarSmsAsyncRe(string nome, string numero, int codigo)
         {
             var payload = new
             {
-                ApiKey = "91fb607ed69b43d2b3919dc922da3a8aab87345baded4ffcb917236b5bef6eb9",
+                ApiKey = _ApiKey,
                 Destino = new[] { numero },
                 Mensagem = $"Olá, {nome}. Use este código para recuperar o acesso à sua conta: {codigo}. O código expira em 5 minutos.",
                 CEspeciais = true
@@ -362,13 +363,11 @@ namespace SistemasdeTarefas.Repository
                 throw new Exception($"Erro SMS: {response.StatusCode}, Detalhes: {responseBody}");
             }
         }
-
-
         private async Task EnviarSmsAsync(string nome, string numero, int codigo)
         {
             var payload = new
             {
-                ApiKey = "91fb607ed69b43d2b3919dc922da3a8aab87345baded4ffcb917236b5bef6eb9", 
+                ApiKey = _ApiKey, 
                 Destino = new[] { numero },
                 Mensagem = $"Olá, {nome}. O seu código é: {codigo}",
                 CEspeciais = true
@@ -422,7 +421,7 @@ namespace SistemasdeTarefas.Repository
                         SET @Resultado = 'Usuário não encontrado';
 
                     SELECT @Resultado AS ResultadoLogin;
-        ";
+                 ";
 
                 using (SqlCommand cmd = new SqlCommand(sqlQuery, connection))
                 {
