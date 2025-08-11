@@ -943,7 +943,8 @@ namespace SistemasdeTarefas.Repository
                                                 NomeTurma = reader.GetString(2),
                                                 NumAluno = reader.GetInt32(4),
                                                 Foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3),
-                                                saldo = reader.GetDecimal(5)
+                                                saldo = reader.GetDecimal(5),
+                                                limiteDiario = reader.GetDecimal(6),
                                             };
 
                                             classes.Add(classe);
