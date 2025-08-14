@@ -29,6 +29,9 @@ namespace SistemasdeTarefas
             builder.Services.AddScoped<ISaldoConsumo, SaldoConsumoRepository>();
             builder.Services.AddScoped<IDividasRepository, DividasRepository>();
             builder.Services.AddScoped<IAnoLectivo, AnoLectivoRepository>();
+            builder.Services.AddScoped<IFamiliaArtigoRepository, FamiliaArtigoRepository>();
+
+
 
             builder.Services.AddControllers()
             .AddJsonOptions(options =>
