@@ -343,7 +343,7 @@ namespace SistemasdeTarefas.Repository
             return artigos;
         }
 
-        public async Task UpdateArtigo(Artigo artigo)
+        public async Task UpdateArtigo(ArtigoDTOUPDATE artigo)
         {
             try
             {
@@ -352,8 +352,7 @@ namespace SistemasdeTarefas.Repository
                     await connection.OpenAsync();
                     string query = @"
                         UPDATE TABARTIGOS
-                        SET CODIGO = @codigo,
-                            NOME = @nome,
+                        SET NOME = @nome,
                             IDFAMILIA = @idFamilia,
                             IDUNIDADE = @idUnidade,
                             PRCVENDA = @prcVenda,
@@ -379,10 +378,19 @@ namespace SistemasdeTarefas.Repository
                         cmd.Parameters.AddWithValue("@stock", artigo.STOCK);
                         cmd.Parameters.AddWithValue("@idUsr", artigo.IDUSR);
                         // Foto - definir explicitamente como tipo image
-                        if (artigo.FOTO != null && artigo.FOTO.Length > 0)
-                            cmd.Parameters.Add("@foto", SqlDbType.Image).Value = artigo.FOTO;
-                        else
-                            cmd.Parameters.Add("@foto", SqlDbType.Image).Value = DBNull.Value;
+                        byte[] fotoBytes = null;
+
+                        if (!string.IsNullOrEmpty(artigo.FOTO))
+                        {
+                            // Remove prefixo se existir
+                            string base64 = artigo.FOTO.Contains(",")
+                                ? artigo.FOTO.Split(',')[1]
+                                : artigo.FOTO;
+
+                            fotoBytes = Convert.FromBase64String(base64);
+                        }
+
+                        cmd.Parameters.Add("@foto", SqlDbType.Image).Value = (object)fotoBytes ?? DBNull.Value;
                         cmd.Parameters.AddWithValue("@idTaxaImposto", artigo.IdTaxaImposto);
                         cmd.Parameters.AddWithValue("@valorTaxa", artigo.ValorTaxa);
                         cmd.Parameters.AddWithValue("@idArmazem", artigo.IdArmazem);

@@ -111,4 +111,11 @@ public class AlunoController : ControllerBase
         var alunos = _alunoRepository.GetAlunosPorNumeroTelefonePai(numero);
         return alunos;
     }
+
+    [HttpGet("getaluno-saldo-por-numaluno")]
+    public IEnumerable<Existencia_Card> GetNUMAluno(string codigo)
+    {
+        var alunos = _alunoRepository.GetAlunoSaldoPorNum(codigo);
+        return alunos;
+    }
 }

@@ -82,7 +82,7 @@ public class FamiliaArtigoController : ControllerBase
     }
 
     [HttpPut("atualizar-artigo")]
-    public async Task<IActionResult> UpdateArtigo([FromBody] Artigo artigo)
+    public async Task<IActionResult> UpdateArtigo([FromBody] ArtigoDTOUPDATE artigo)
     {
         await _repository.UpdateArtigo(artigo);
         return Ok(new { message = "Artigo atualizado com sucesso!" });
