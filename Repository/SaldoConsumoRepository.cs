@@ -103,6 +103,111 @@ namespace SistemasdeTarefas.Repository
                 }
             }
         }
+
+        public async Task ConsumoPOSAsync(
+    int numAluno,
+    decimal usedValue,
+    decimal quantidade,
+    decimal precoUnidade,
+    string nomeItem,
+    int idFamilia,
+    int idArtigo,
+    bool anular,
+    int idUser)
+        {
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                int idInserido = 0;
+                int idAluno = 0;
+
+                await connection.OpenAsync();
+
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        string sqlQuery = @"
+                    DECLARE @IdAluno INT;
+                    SET @IdAluno = (SELECT IDALUNO FROM TABALUNOS WHERE NUMALUNO = @NumAluno);
+
+                    INSERT INTO SaldosConsumos (
+                        IDALUNO,
+                        UsedValue,
+                        Anulado,
+                        Deleted,
+                        DataRegisto,
+                        DataAlter,
+                        TimeRegist
+                    )
+                    VALUES (
+                        @IdAluno,
+                        @UsedValue,
+                        0,
+                        0,
+                        @DataRegisto,
+                        @DataAlter,
+                        @TimeRegist
+                    );
+
+                    SELECT @IdAluno AS IdAluno, SCOPE_IDENTITY() AS IdSaldoConsumo;
+                ";
+
+                        using (SqlCommand cmd = new SqlCommand(sqlQuery, connection, transaction))
+                        {
+                            cmd.Parameters.Add(new SqlParameter("@NumAluno", SqlDbType.Int) { Value = numAluno });
+                            cmd.Parameters.Add(new SqlParameter("@UsedValue", SqlDbType.Decimal) { Value = usedValue });
+                            cmd.Parameters.Add(new SqlParameter("@DataRegisto", SqlDbType.DateTime) { Value = DateTime.Now });
+                            cmd.Parameters.Add(new SqlParameter("@DataAlter", SqlDbType.DateTime) { Value = DateTime.Now });
+                            cmd.Parameters.Add(new SqlParameter("@TimeRegist", SqlDbType.Time) { Value = DateTime.Now.TimeOfDay });
+
+                            using (var reader = await cmd.ExecuteReaderAsync())
+                            {
+                                if (await reader.ReadAsync())
+                                {
+                                    idAluno = reader.GetInt32(reader.GetOrdinal("IdAluno"));
+                                    idInserido = Convert.ToInt32(reader["IdSaldoConsumo"]);
+                                }
+                            }
+                        }
+
+                        // Passando também o idAluno para a procedure
+                        await InserirPosCafeteriaAsync(
+                            quantidade,
+                            precoUnidade,
+                            nomeItem,
+                            idFamilia,
+                            idArtigo,
+                            idInserido, // ID Saldo Consumo
+                            anular,
+                            idUser,
+                            idAluno // agora vai
+                        );
+
+                        transaction.Commit();
+                    }
+                    catch (SqlException sqlEx)
+                    {
+                        transaction.Rollback();
+
+                        var errorMessage = "Erro ao realizar o lançamento de consumo ou inserir no POS Cafeteria. Detalhes do erro SQL: ";
+                        foreach (SqlError error in sqlEx.Errors)
+                        {
+                            errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
+                        }
+
+                        throw new ApplicationException(errorMessage, sqlEx);
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        throw new ApplicationException("Erro ao processar consumo.", ex);
+                    }
+                }
+            }
+        }
+
+
+
         public IEnumerable<Dashboard> Dashboad()
         {
             List<Dashboard> dashboard = new List<Dashboard>();
@@ -333,6 +438,62 @@ namespace SistemasdeTarefas.Repository
 
             return SaldoConsumos;
         }
+
+        public async Task InserirPosCafeteriaAsync(
+    decimal quantidade,
+    decimal precoUnidade,
+    string nomeItem,
+    int idFamilia,
+    int idArtigo,
+    int idSaldoConsumo,
+    bool anular,
+    int idUser,
+    int idaluno)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                {
+                    await connection.OpenAsync();
+
+                    using (SqlCommand cmd = new SqlCommand("sp_InserirPosCafeteria", connection))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.Add(new SqlParameter("@Quantidade", SqlDbType.Decimal) { Value = quantidade });
+                        cmd.Parameters.Add(new SqlParameter("@PrecoUnidade", SqlDbType.Decimal) { Value = precoUnidade });
+                        cmd.Parameters.Add(new SqlParameter("@NomeItem", SqlDbType.NVarChar, 200) { Value = nomeItem });
+                        cmd.Parameters.Add(new SqlParameter("@IdFamilia", SqlDbType.Int) { Value = idFamilia });
+                        cmd.Parameters.Add(new SqlParameter("@IdArtigo", SqlDbType.Int) { Value = idArtigo });
+                        cmd.Parameters.Add(new SqlParameter("@IdSaldoConsumo", SqlDbType.Int) { Value = idSaldoConsumo });
+                        cmd.Parameters.Add(new SqlParameter("@Anular", SqlDbType.Bit) { Value = anular });
+                        cmd.Parameters.Add(new SqlParameter("@IdUser", SqlDbType.Int) { Value = idUser });
+                        cmd.Parameters.Add(new SqlParameter("@IdAluno", SqlDbType.Int) { Value = idaluno });
+
+                        try
+                        {
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+                        catch (SqlException sqlEx)
+                        {
+                            var errorMessage = "Erro ao executar a stored procedure 'sp_InserirPosCafeteria'. Detalhes do erro SQL:";
+                            foreach (SqlError error in sqlEx.Errors)
+                            {
+                                errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
+                            }
+
+                            throw new ApplicationException(errorMessage, sqlEx);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("Erro ao inserir no POS Cafeteria.", ex);
+            }
+        }
+
+
         public IEnumerable<Ticket> List()
         {
             List<Ticket> SaldoConsumos = new List<Ticket>();

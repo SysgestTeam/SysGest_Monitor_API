@@ -17,6 +17,27 @@ namespace SistemasdeTarefas.Interface
         public IEnumerable<Ticket> List();
         public IEnumerable<Dashboard> Dashboad();
         public IEnumerable<CalculoParaEstatistica> CalculoParaEstatistica();
+        public Task InserirPosCafeteriaAsync(
+            decimal quantidade,
+            decimal precoUnidade,
+            string nomeItem,
+            int idFamilia,
+            int idArtigo,
+            int idSaldoConsumo,
+            bool anular,
+            int idUser,
+            int aluno);
+
+        public Task ConsumoPOSAsync(
+            int numAluno,
+            decimal usedValue,
+            decimal quantidade,
+            decimal precoUnidade,
+            string nomeItem,
+            int idFamilia,
+            int idArtigo,
+            bool anular,
+            int idUser);
         public void PrintTicket(int numAluno);
 
     }

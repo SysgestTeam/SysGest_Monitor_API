@@ -171,4 +171,43 @@ public class SaldoConsumoController : ControllerBase
             return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
         }
     }
+
+
+    [HttpPost("consumo-pos")]
+    [EnableCors("AllowAll")]
+    public async Task<IActionResult> PostConsumo([FromBody] List<ConsumoPosDto> consumos)
+    {
+        if (consumos == null || consumos.Count == 0)
+            return BadRequest(new { mensagem = "Nenhum consumo enviado." });
+
+        try
+        {
+            foreach (var item in consumos)
+            {
+                await _SaldoRepository.ConsumoPOSAsync(
+                    item.NumAluno,
+                    item.UsedValue,
+                    item.Quantidade,
+                    item.PrecoUnidade,
+                    item.NomeItem,
+                    item.IdFamilia,
+                    item.IdArtigo,
+                    item.Anular,
+                    item.IdUser
+
+                );
+            }
+
+            return Ok(new { mensagem = "Todos os consumos foram registrados com sucesso!" });
+        }
+        catch (ApplicationException ex)
+        {
+            return BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
+
 }
