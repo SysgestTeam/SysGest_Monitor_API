@@ -206,8 +206,6 @@ namespace SistemasdeTarefas.Repository
             }
         }
 
-
-
         public IEnumerable<Dashboard> Dashboad()
         {
             List<Dashboard> dashboard = new List<Dashboard>();
@@ -550,6 +548,52 @@ namespace SistemasdeTarefas.Repository
 
             return SaldoConsumos;
         }
+
+        public IEnumerable<ConsumoPosDto> Listas_ConsumoPOs()
+        {
+            List<ConsumoPosDto> lista = new List<ConsumoPosDto>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                string sql = @"
+                    SELECT 
+                        TA.NUMALUNO,
+                        TA.NOME, 
+                        TP.Quantidade,
+                        TP.TotalValor,
+                        TP.PrecoUnidade, 
+                        TP.NomeItem,
+                        TP.Anular,
+                        TP.IdSaldoConsumo  
+                    FROM TABALUNOS TA
+                    INNER JOIN TABPOSCAFETERIA TP ON TP.IdAluno = TA.IDALUNO";
+
+                using (SqlCommand cmd = new SqlCommand(sql, connection))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        lista.Add(new ConsumoPosDto
+                        {
+                            NumAluno = reader.GetInt32(reader.GetOrdinal("NUMALUNO")),
+                            NomeAluno = reader["NOME"].ToString(),
+                            Quantidade = reader.GetInt32(reader.GetOrdinal("Quantidade")),
+                            UsedValue = reader.GetDecimal(reader.GetOrdinal("TotalValor")),
+                            PrecoUnidade = reader.GetDecimal(reader.GetOrdinal("PrecoUnidade")),
+                            NomeItem = reader["NomeItem"].ToString(),
+                            Anular = reader.GetBoolean(reader.GetOrdinal("Anular")),
+                            IdSaldoConsumo = reader.GetInt32(reader.GetOrdinal("IdSaldoConsumo"))
+                        });
+                    }
+                }
+            }
+
+            return lista;
+        }
+
+
         public IEnumerable<Ticket> ListTicket(int numAluno)
         {
             List<Ticket> SaldoConsumos = new List<Ticket>();

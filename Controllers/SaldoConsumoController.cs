@@ -210,4 +210,23 @@ public class SaldoConsumoController : ControllerBase
         }
     }
 
+
+    [HttpGet("listar-consumo-pos")]
+    [EnableCors("AllowAll")]
+    public IActionResult Listar_ConsumoPos()
+    {
+        try
+        {
+            var alunos = _SaldoRepository.Listas_ConsumoPOs();
+            return Ok(alunos);
+        }
+        catch (ApplicationException ex)
+        {
+            return BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
 }

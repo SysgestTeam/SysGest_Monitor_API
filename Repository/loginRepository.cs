@@ -5,9 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using System.Security.Cryptography;
 using SistemasdeTarefas.Service;
-using System.Net.Http;
 using SistemasdeTarefas.Models;
 
 namespace SistemasdeTarefas.Repository
@@ -216,7 +214,12 @@ namespace SistemasdeTarefas.Repository
                         OR OITELFMAE = @NumeroTelefone 
                         OR OITELFENCARG = @NumeroTelefone
                     )
-                    AND UsaAppSync = 1";
+                    AND( 
+                       UsaAppSync = 1
+                       OR  PaiUsaApp = 1
+                       OR MaeUsaApp = 1 
+                       OR  EncUsaApp = 1)
+                      )";
 
                     bool numeroExiste;
                     using (SqlCommand cmd = new SqlCommand(sqlCheck, connection))
