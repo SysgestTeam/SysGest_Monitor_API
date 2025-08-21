@@ -30,6 +30,7 @@ namespace SistemasdeTarefas
             builder.Services.AddScoped<IDividasRepository, DividasRepository>();
             builder.Services.AddScoped<IAnoLectivo, AnoLectivoRepository>();
             builder.Services.AddScoped<IFamiliaArtigoRepository, FamiliaArtigoRepository>();
+            builder.Services.AddScoped<IFinancaRepository, FinancaRepository>();
 
 
 
