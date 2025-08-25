@@ -5,7 +5,7 @@
         public int IdAlunoDossier { get; set; }
         public int IdAluno { get; set; }
         public int NumAluno { get; set; }
-        public string Nome { get; set; } 
+        public string? Nome { get; set; } 
         public int IdCustomer { get; set; }
         public int IdStatusAluno { get; set; }
         public int IdAno { get; set; }
@@ -33,7 +33,7 @@
         public DateTime? DateDeleted { get; set; }
         public int? IdUserDel { get; set; }
         public bool? Deleted { get; set; }
-        public string TimeDeleted { get; set; }
+        public string? TimeDeleted { get; set; }
     }
 
 }

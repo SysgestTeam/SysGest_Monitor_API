@@ -3,7 +3,7 @@
     public class Login
     {
         public string user{ get; set; }
-        public string numero{ get; set; }
+        public string? numero{ get; set; }
         public string senha { get; set; }
     }
 }

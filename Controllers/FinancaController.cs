@@ -28,5 +28,52 @@ namespace SistemasdeTarefas.Controllers
             return Ok(alunos);
         }
 
+        [HttpGet("alunoDossier")]
+        public async Task<ActionResult<IEnumerable<AlunoDossierCT>>> ListarAlunoDossierCT(int IdAlunoDossier)
+        {
+            var alunos = await _financaRepository.GetAlunoDossierCTByIdAlunoDossier(IdAlunoDossier);
+
+            return Ok(alunos);
+        }
+
+        [HttpGet("alunoDossierCT")]
+        public async Task<ActionResult<IEnumerable<AlunoDossierLin>>> ListarAlunoDossierLin(int AlunoDossierCT)
+        {
+            var alunos = await _financaRepository.GetAlunoDossierLinCTByIdAlunoDossierCT(AlunoDossierCT);
+
+            return Ok(alunos);
+        }
+
+        [HttpGet("contratos-pagos-ou-nao-pagos")]
+        public async Task<ActionResult<IEnumerable<AlunoDossierLin>>> GetContratosPagosOUNaoPagos(int IdAlunoDossierCT, bool pago)
+        {
+            var alunos = await _financaRepository.GetContratosPagosOUNaoPagos(IdAlunoDossierCT, pago);
+
+            return Ok(alunos);
+        }
+
+        //[HttpGet("contratos-por-ano")]
+        //public async Task<ActionResult<IEnumerable<AlunoDossierLin>>> GetContratosPagosOUNaoPagosByYear(int? ano = null,
+        //     bool? pago = null,
+        //     int? idTurma = null,
+        //     int? idClasse = null,
+        //     int? numAluno = null)
+        //{
+        //    var alunos = await _financaRepository.GetContratosPagosOUNaoPagosByYear(ano,
+        //     pago,
+        //     idTurma,
+        //     idClasse,
+        //     numAluno);
+
+        //    return Ok(alunos);
+        //}
+
+        [HttpGet("customer-invoice")]
+        public async Task<ActionResult<IEnumerable<AlunoDossierLin>>> GetCustomerInvoicesByAnoAndNumAluno(int? ano = null,int? numAluno = null)
+        {
+            var alunos = await _financaRepository.GetCustomerInvoicesByAnoAndNumAluno(ano,numAluno);
+
+            return Ok(alunos);
+        }
     }
 }

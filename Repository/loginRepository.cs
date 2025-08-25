@@ -218,8 +218,7 @@ namespace SistemasdeTarefas.Repository
                        UsaAppSync = 1
                        OR  PaiUsaApp = 1
                        OR MaeUsaApp = 1 
-                       OR  EncUsaApp = 1)
-                      )";
+                       OR  EncUsaApp = 1)";
 
                     bool numeroExiste;
                     using (SqlCommand cmd = new SqlCommand(sqlCheck, connection))

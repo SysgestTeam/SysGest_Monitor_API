@@ -41,5 +41,7 @@ namespace SistemasdeTarefas.Interface
             int idUser);
         public void PrintTicket(int numAluno);
 
+        public void RemoverSaldoPOS(int idsaldo, bool apagado);
+
     }
 }

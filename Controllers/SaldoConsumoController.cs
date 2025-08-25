@@ -75,6 +75,25 @@ public class SaldoConsumoController : ControllerBase
     }
 
 
+    [HttpPost("delete-pos-saldo")]
+    [EnableCors("AllowAll")]
+    public IActionResult pos_delete_Saldo(int idsaldo, bool apagado)
+    {
+        try
+        {
+            _SaldoRepository.RemoverSaldoPOS(idsaldo, apagado);
+            return Ok(new { mensagem = "POS Actulizado com sucesso!" });
+        }
+        catch (ApplicationException ex)
+        {
+            return BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
+
     [HttpGet("historico")]
     [EnableCors("AllowAll")]
     public IEnumerable<SaldoConsumo> get(int NumALuno)

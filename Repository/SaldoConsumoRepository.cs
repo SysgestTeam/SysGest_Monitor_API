@@ -105,106 +105,106 @@ namespace SistemasdeTarefas.Repository
         }
 
         public async Task ConsumoPOSAsync(
-    int numAluno,
-    decimal usedValue,
-    decimal quantidade,
-    decimal precoUnidade,
-    string nomeItem,
-    int idFamilia,
-    int idArtigo,
-    bool anular,
-    int idUser)
-        {
-            using (SqlConnection connection = new SqlConnection(_connectionString))
-            {
-                int idInserido = 0;
-                int idAluno = 0;
-
-                await connection.OpenAsync();
-
-                using (SqlTransaction transaction = connection.BeginTransaction())
+            int numAluno,
+            decimal usedValue,
+            decimal quantidade,
+            decimal precoUnidade,
+            string nomeItem,
+            int idFamilia,
+            int idArtigo,
+            bool anular,
+            int idUser)
                 {
-                    try
+                    using (SqlConnection connection = new SqlConnection(_connectionString))
                     {
-                        string sqlQuery = @"
-                    DECLARE @IdAluno INT;
-                    SET @IdAluno = (SELECT IDALUNO FROM TABALUNOS WHERE NUMALUNO = @NumAluno);
+                        int idInserido = 0;
+                        int idAluno = 0;
 
-                    INSERT INTO SaldosConsumos (
-                        IDALUNO,
-                        UsedValue,
-                        Anulado,
-                        Deleted,
-                        DataRegisto,
-                        DataAlter,
-                        TimeRegist
-                    )
-                    VALUES (
-                        @IdAluno,
-                        @UsedValue,
-                        0,
-                        0,
-                        @DataRegisto,
-                        @DataAlter,
-                        @TimeRegist
-                    );
+                        await connection.OpenAsync();
 
-                    SELECT @IdAluno AS IdAluno, SCOPE_IDENTITY() AS IdSaldoConsumo;
-                ";
-
-                        using (SqlCommand cmd = new SqlCommand(sqlQuery, connection, transaction))
+                        using (SqlTransaction transaction = connection.BeginTransaction())
                         {
-                            cmd.Parameters.Add(new SqlParameter("@NumAluno", SqlDbType.Int) { Value = numAluno });
-                            cmd.Parameters.Add(new SqlParameter("@UsedValue", SqlDbType.Decimal) { Value = usedValue });
-                            cmd.Parameters.Add(new SqlParameter("@DataRegisto", SqlDbType.DateTime) { Value = DateTime.Now });
-                            cmd.Parameters.Add(new SqlParameter("@DataAlter", SqlDbType.DateTime) { Value = DateTime.Now });
-                            cmd.Parameters.Add(new SqlParameter("@TimeRegist", SqlDbType.Time) { Value = DateTime.Now.TimeOfDay });
-
-                            using (var reader = await cmd.ExecuteReaderAsync())
+                            try
                             {
-                                if (await reader.ReadAsync())
+                                string sqlQuery = @"
+                            DECLARE @IdAluno INT;
+                            SET @IdAluno = (SELECT IDALUNO FROM TABALUNOS WHERE NUMALUNO = @NumAluno);
+
+                            INSERT INTO SaldosConsumos (
+                                IDALUNO,
+                                UsedValue,
+                                Anulado,
+                                Deleted,
+                                DataRegisto,
+                                DataAlter,
+                                TimeRegist
+                            )
+                            VALUES (
+                                @IdAluno,
+                                @UsedValue,
+                                0,
+                                0,
+                                @DataRegisto,
+                                @DataAlter,
+                                @TimeRegist
+                            );
+
+                            SELECT @IdAluno AS IdAluno, SCOPE_IDENTITY() AS IdSaldoConsumo;
+                        ";
+
+                                using (SqlCommand cmd = new SqlCommand(sqlQuery, connection, transaction))
                                 {
-                                    idAluno = reader.GetInt32(reader.GetOrdinal("IdAluno"));
-                                    idInserido = Convert.ToInt32(reader["IdSaldoConsumo"]);
+                                    cmd.Parameters.Add(new SqlParameter("@NumAluno", SqlDbType.Int) { Value = numAluno });
+                                    cmd.Parameters.Add(new SqlParameter("@UsedValue", SqlDbType.Decimal) { Value = usedValue });
+                                    cmd.Parameters.Add(new SqlParameter("@DataRegisto", SqlDbType.DateTime) { Value = DateTime.Now });
+                                    cmd.Parameters.Add(new SqlParameter("@DataAlter", SqlDbType.DateTime) { Value = DateTime.Now });
+                                    cmd.Parameters.Add(new SqlParameter("@TimeRegist", SqlDbType.Time) { Value = DateTime.Now.TimeOfDay });
+
+                                    using (var reader = await cmd.ExecuteReaderAsync())
+                                    {
+                                        if (await reader.ReadAsync())
+                                        {
+                                            idAluno = reader.GetInt32(reader.GetOrdinal("IdAluno"));
+                                            idInserido = Convert.ToInt32(reader["IdSaldoConsumo"]);
+                                        }
+                                    }
                                 }
+
+                                // Passando também o idAluno para a procedure
+                                await InserirPosCafeteriaAsync(
+                                    quantidade,
+                                    precoUnidade,
+                                    nomeItem,
+                                    idFamilia,
+                                    idArtigo,
+                                    idInserido, // ID Saldo Consumo
+                                    anular,
+                                    idUser,
+                                    idAluno // agora vai
+                                );
+
+                                transaction.Commit();
+                            }
+                            catch (SqlException sqlEx)
+                            {
+                                transaction.Rollback();
+
+                                var errorMessage = "Erro ao realizar o lançamento de consumo ou inserir no POS Cafeteria. Detalhes do erro SQL: ";
+                                foreach (SqlError error in sqlEx.Errors)
+                                {
+                                    errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
+                                }
+
+                                throw new ApplicationException(errorMessage, sqlEx);
+                            }
+                            catch (Exception ex)
+                            {
+                                transaction.Rollback();
+                                throw new ApplicationException("Erro ao processar consumo.", ex);
                             }
                         }
-
-                        // Passando também o idAluno para a procedure
-                        await InserirPosCafeteriaAsync(
-                            quantidade,
-                            precoUnidade,
-                            nomeItem,
-                            idFamilia,
-                            idArtigo,
-                            idInserido, // ID Saldo Consumo
-                            anular,
-                            idUser,
-                            idAluno // agora vai
-                        );
-
-                        transaction.Commit();
-                    }
-                    catch (SqlException sqlEx)
-                    {
-                        transaction.Rollback();
-
-                        var errorMessage = "Erro ao realizar o lançamento de consumo ou inserir no POS Cafeteria. Detalhes do erro SQL: ";
-                        foreach (SqlError error in sqlEx.Errors)
-                        {
-                            errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
-                        }
-
-                        throw new ApplicationException(errorMessage, sqlEx);
-                    }
-                    catch (Exception ex)
-                    {
-                        transaction.Rollback();
-                        throw new ApplicationException("Erro ao processar consumo.", ex);
                     }
                 }
-            }
-        }
 
         public IEnumerable<Dashboard> Dashboad()
         {
@@ -815,6 +815,70 @@ namespace SistemasdeTarefas.Repository
                 }
             }
         }
+
+        public void RemoverSaldoPOS(int idsaldo, bool apagado)
+        {
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                int idInserido = 0;
+                connection.Open();
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // Query SQL para lançar o consumo e obter o ID gerado
+                        string sqlQuery = @" BEGIN TRANSACTION
+
+	                     UPDATE [TABPOSCAFETERIA] SET Anular = @apagado
+	                     WHERE IdSaldoConsumo = @idSaldo
+
+	                     UPDATE SaldosConsumos SET Anulado = @apagado
+	                     WHERE Id = @idSaldo
+
+                         COMMIT;
+                        ";
+
+                        using (SqlCommand cmd = new SqlCommand(sqlQuery, connection, transaction))
+                        {
+                            // Adicionar parâmetros
+                            cmd.Parameters.Add(new SqlParameter("@idSaldo", SqlDbType.Int) { Value = idsaldo });
+                            cmd.Parameters.Add(new SqlParameter("@apagado", SqlDbType.Bit) { Value = apagado });
+
+                            // Executar a query e obter o ID gerado
+                            idInserido = Convert.ToInt32(cmd.ExecuteScalar());
+                        }
+
+
+                        // Confirmar a transação
+                        transaction.Commit();
+                    }
+                    catch (SqlException sqlEx)
+                    {
+                        // Reverter a transação em caso de erro SQL
+                        transaction.Rollback();
+
+                        // Criar uma mensagem detalhada do erro
+                        var errorMessage = "Erro ao realizar Inactivar ou Activar o Ticket!";
+                        foreach (SqlError error in sqlEx.Errors)
+                        {
+                            errorMessage += $"\nMensagem: {error.Message}, Linha: {error.LineNumber}, Origem: {error.Procedure}";
+                        }
+
+                        // Lançar uma exceção personalizada
+                        throw new ApplicationException(errorMessage, sqlEx);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Reverter a transação para erros genéricos
+                        transaction.Rollback();
+
+                        // Lançar uma exceção padrão
+                        throw new ApplicationException("Erro ao processar o pagamento: o ticket já foi gerado!", ex);
+                    }
+                }
+            }
+        }
+
         private string ManipulateName(string fullName)
         {
             var nameParts = fullName.Split(' ');
