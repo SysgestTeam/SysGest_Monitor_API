@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using SistemasdeTarefas.Interface;
 using SistemasdeTarefas.Models;
+using SistemasdeTarefas.Repository;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -17,7 +18,6 @@ public class LoginController : ControllerBase
         _loginRepository = loginRepository;
         _alunoRepository = alunoRepository;
     }
-
 
     [HttpPost]
     [EnableCors("AllowAll")]
@@ -83,6 +83,7 @@ public class LoginController : ControllerBase
             });
         }
     }
+
     [HttpPost("validar-codigo")]
     [EnableCors("AllowAll")]
     public IActionResult PostValidarCodigo(int numeroTelefone, string codigoRecebido)
@@ -98,7 +99,6 @@ public class LoginController : ControllerBase
             return BadRequest(new { Erro = ex.Message });
         }
     }
-
 
     [HttpPost("Criar-senha-para-pai")]
     [EnableCors("AllowAll")]
@@ -154,7 +154,6 @@ public class LoginController : ControllerBase
         }
     }
 
-
     [HttpPost("obter-senha-desencriptada")]
     [EnableCors("AllowAll")]
     public IActionResult ObterSenhaDesencriptada(string numeroTelefone)
@@ -170,7 +169,6 @@ public class LoginController : ControllerBase
             return BadRequest(new { Erro = ex.Message });
         }
     }
-
 
     [HttpPost("recuperar-senha")]
     [EnableCors("AllowAll")]
@@ -194,6 +192,28 @@ public class LoginController : ControllerBase
         }
     }
 
+
+    [HttpGet("busca-id-user")]
+    public async Task<IActionResult> Get_Id_User(string user)
+    {
+        try
+        {
+            var id = await _loginRepository.GetIdUserAsync(user);
+
+            if (id == 0)
+                return NotFound(new { mensagem = "Usuário não encontrado." });
+
+            return Ok(id);
+        }
+        catch (ApplicationException ex)
+        {
+            return BadRequest(new { mensagem = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { mensagem = "Erro interno ao processar a solicitação." });
+        }
+    }
 
 
 }

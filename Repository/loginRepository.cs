@@ -442,5 +442,28 @@ namespace SistemasdeTarefas.Repository
 
             return resultadoLogin;
         }
+
+        public async Task<int> GetIdUserAsync(string user)
+        {
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                string query = "SELECT IDUSER FROM TABUSER WHERE USERLOGIN = @userLogin";
+
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@userLogin", user);
+
+                    object result = await command.ExecuteScalarAsync();
+
+                    if (result != null && result != DBNull.Value)
+                        return Convert.ToInt32(result);
+
+                    return 0; // caso não encontre
+                }
+            }
+        }
+
     }
 }

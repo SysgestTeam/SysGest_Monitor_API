@@ -6,6 +6,7 @@ namespace SistemasdeTarefas.Interface
     {
         public string login(string user, string senha);
         public Task<int> GerarNumerode6DigitosParaosPais(string nome, string numero, string email);
+        public Task<int> GetIdUserAsync(string user);
         public void CriarSenhaParaPai(string numero, string senha);
         public IEnumerable<Login> ObterSenhaDesencriptada(string numeroTelefone);
         public  Task<int> GerarCodigoRecuperacaoSenhaAsync(string numero);
