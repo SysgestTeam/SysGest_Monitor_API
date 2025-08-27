@@ -2,32 +2,36 @@
 {
     public class AlunoDossierCT
     {
-        public int IdAlunoDossierCT { get; set; }
-        public int IdAlunoDossier { get; set; }
-        public int? IdAnoLectivo { get; set; }
-        public int IdContrato { get; set; }
-        public string? NomeContrato { get; set; }
-        public decimal? ValorEmissao { get; set; }
-        public DateTime? DataIni { get; set; }
-        public DateTime? DataFim { get; set; }
-        public decimal? ValorPrevisto { get; set; }
-        public bool? IsBolseiro { get; set; }
-        public int? IdBolsa { get; set; }
-        public bool? TemOutroDesc { get; set; }
-        public decimal? TxDesc { get; set; }   
-        public string? NomeDesc { get; set; }
-        public bool? RemoveDesc { get; set; }
-        public bool? IsAnoAnterior { get; set; }
-        public DateTime? DataRegisto { get; set; }
-        public DateTime? DataAlter { get; set; }
-        public string? TimeRegist { get; set; }
-        public string? TimeAlter { get; set; }
-        public int? IdUserRegisto { get; set; }
-        public int? IdUserAlter { get; set; }
-        public DateTime? DateDeleted { get; set; }
-        public int? IdUserDel { get; set; }
-        public bool Deleted { get; set; }
-        public string? TimeDeleted { get; set; }
-        public bool? IsMulta { get; set; }
+            public int IdStudentDossierCT { get; set; }
+            public int IdStudentDossier { get; set; }
+            public int? AcademicYearId { get; set; }
+            public int ContractId { get; set; }
+            public string? ContractName { get; set; }
+            public decimal? IssueValue { get; set; }
+            public DateTime? StartDate { get; set; }
+            public DateTime? EndDate { get; set; }
+            public decimal? ExpectedValue { get; set; }
+            public bool? IsScholarship { get; set; }
+            public int? ScholarshipId { get; set; }
+            public bool? HasOtherDiscount { get; set; }
+            public decimal? DiscountRate { get; set; }
+            public string? DiscountName { get; set; }
+            public bool? RemoveDiscount { get; set; }
+            public bool? IsPreviousYear { get; set; }
+            public DateTime? RegisterDate { get; set; }
+            public DateTime? UpdateDate { get; set; }
+            public string? RegisterTime { get; set; }
+            public string? UpdateTime { get; set; }
+            public int? RegisterUserId { get; set; }
+            public int? UpdateUserId { get; set; }
+            public DateTime? DeletedDate { get; set; }
+            public int? DeletedUserId { get; set; }
+            public bool Deleted { get; set; }
+            public string? DeletedTime { get; set; }
+            public bool? IsFine { get; set; }
+       
+
     }
+
+
 }

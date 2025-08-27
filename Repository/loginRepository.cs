@@ -198,27 +198,27 @@ namespace SistemasdeTarefas.Repository
                     await connection.OpenAsync();
 
                     string sqlCheck = @"
-                SELECT 1
-                FROM 
-                    TABALUNOS 
-                    INNER JOIN TABMATRICULAS ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
-                    INNER JOIN TABTURMAS ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA    
-                    INNER JOIN TABSTATUS s ON TABALUNOS.IDSTATUS = s.IDSTATUS 
-                WHERE 
-                    TABALUNOS.INACTIVO = 0 
-                    AND TABMATRICULAS.IDSTATUS IN (2, 4) 
-                    AND TABTURMAS.NOME NOT IN ('FUNCIONÁRIO', 'DOCENTE')
-                    AND TABMATRICULAS.IDANOLECTIVO = (SELECT MAX(IDANO) FROM TABANOSLECTIVOS)
-                    AND (
-                        OITELFPAI = @NumeroTelefone 
-                        OR OITELFMAE = @NumeroTelefone 
-                        OR OITELFENCARG = @NumeroTelefone
-                    )
-                    AND( 
-                       UsaAppSync = 1
-                       OR  PaiUsaApp = 1
-                       OR MaeUsaApp = 1 
-                       OR  EncUsaApp = 1)";
+                                    SELECT 1
+                                    FROM 
+                                        TABALUNOS 
+                                        INNER JOIN TABMATRICULAS ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
+                                        INNER JOIN TABTURMAS ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA    
+                                        INNER JOIN TABSTATUS s ON TABALUNOS.IDSTATUS = s.IDSTATUS 
+                                    WHERE 
+                                        TABALUNOS.INACTIVO = 0 
+                                        AND TABMATRICULAS.IDSTATUS IN (2, 4) 
+                                        AND TABTURMAS.NOME NOT IN ('FUNCIONÁRIO', 'DOCENTE')
+                                        AND TABMATRICULAS.IDANOLECTIVO = (SELECT MAX(IDANO) FROM TABANOSLECTIVOS)
+                                        AND (
+                                            OITELFPAI = @NumeroTelefone 
+                                            OR OITELFMAE = @NumeroTelefone 
+                                            OR OITELFENCARG = @NumeroTelefone
+                                        )
+                                        AND( 
+                                           UsaAppSync = 1
+                                           OR  PaiUsaApp = 1
+                                           OR MaeUsaApp = 1 
+                                           OR  EncUsaApp = 1)";
 
                     bool numeroExiste;
                     using (SqlCommand cmd = new SqlCommand(sqlCheck, connection))

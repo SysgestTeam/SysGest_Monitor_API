@@ -21,6 +21,7 @@ public class FamiliaArtigoController : ControllerBase
     #region FAMÍLIA
 
     [HttpPost("criar-familia")]
+    [EnableCors("AllowAll")]
     public async Task<IActionResult> CreateFamily([FromBody] FamiliaDTO familia)
     {
         await _repository.CreatFamily(familia);
@@ -28,6 +29,7 @@ public class FamiliaArtigoController : ControllerBase
     }
 
     [HttpGet("listar-familias")]
+    [EnableCors("AllowAll")]
     public async Task<ActionResult<IEnumerable<Familia>>> ListFamily()
     {
         var result = await _repository.ListFamily();
@@ -35,6 +37,7 @@ public class FamiliaArtigoController : ControllerBase
     }
 
     [HttpGet("buscar-familia/{id}")]
+    [EnableCors("AllowAll")]
     public async Task<ActionResult<IEnumerable<Familia>>> GetFamilyById(int id)
     {
         var result = await _repository.FindByIdAFamily(id);
@@ -42,6 +45,7 @@ public class FamiliaArtigoController : ControllerBase
     }
 
     [HttpPut("atualizar-familia")]
+    [EnableCors("AllowAll")]
     public async Task<IActionResult> UpdateFamily([FromBody] Familia familia)
     {
         await _repository.UpdateFamily(familia);
@@ -49,6 +53,7 @@ public class FamiliaArtigoController : ControllerBase
     }
 
     [HttpDelete("apagar-familia/{id}")]
+    [EnableCors("AllowAll")]
     public async Task<IActionResult> DeleteFamily(int id)
     {
         await _repository.DeleteFamily(id);
@@ -60,6 +65,7 @@ public class FamiliaArtigoController : ControllerBase
     #region ARTIGO
 
     [HttpPost("criar-artigo")]
+    [EnableCors("AllowAll")]
     public async Task<IActionResult> CreateArtigo([FromBody] ArtigoDTO artigo)
     {
         await _repository.CreatArtigo(artigo);
@@ -67,6 +73,8 @@ public class FamiliaArtigoController : ControllerBase
     }
 
     [HttpGet("listar-artigos")]
+
+    [EnableCors("AllowAll")]
     public async Task<ActionResult<IEnumerable<Artigo>>> ListArtigo()
     {
 
@@ -75,6 +83,8 @@ public class FamiliaArtigoController : ControllerBase
     }
 
     [HttpGet("buscar-artigo/{id}")]
+
+    [EnableCors("AllowAll")]
     public async Task<ActionResult<IEnumerable<Artigo>>> GetArtigoById(int id)
     {
         var result = await _repository.FindByIdArtigo(id);
@@ -82,6 +92,7 @@ public class FamiliaArtigoController : ControllerBase
     }
 
     [HttpPut("atualizar-artigo")]
+    [EnableCors("AllowAll")]
     public async Task<IActionResult> UpdateArtigo([FromBody] ArtigoDTOUPDATE artigo)
     {
         await _repository.UpdateArtigo(artigo);
@@ -89,6 +100,7 @@ public class FamiliaArtigoController : ControllerBase
     }
 
     [HttpDelete("apagar-artigo/{id}")]
+    [EnableCors("AllowAll")]
     public async Task<IActionResult> DeleteArtigo(int id)
     {
         await _repository.DeleteArtigo(id);

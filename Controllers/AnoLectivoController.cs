@@ -19,6 +19,7 @@ public class AnoLectivoController : ControllerBase
 
 
     [HttpGet]
+    [EnableCors("AllowAll")]
     public ActionResult<IEnumerable<Student>> GetAnoLectivo()
     {
         var alunos = _anoRepository.GetAnoLectivo();
