@@ -845,11 +845,6 @@ namespace SistemasdeTarefas.Repository
                                                 AND TABMATRICULAS.IDSTATUS IN (2,4) 
                                                 AND TABTURMAS.NOME NOT IN ('FUNCIONÁRIO', 'DOCENTE')
                                                 AND TABMATRICULAS.IDANOLECTIVO = (SELECT MAX(IDANO) FROM TABANOSLECTIVOS)
-                                                AND( 
-                                                    UsaAppSync = 1
-                                                    OR  PaiUsaApp = 1
-                                                    OR MaeUsaApp = 1 
-                                                    OR  EncUsaApp = 1)
                                         )
                                         SELECT 
                                             UPPER(SUBSTRING(ALUNO, 1, CHARINDEX(' ', ALUNO + ''))) 

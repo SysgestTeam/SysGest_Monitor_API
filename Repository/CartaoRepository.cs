@@ -13,7 +13,6 @@ namespace SistemasdeTarefas.Repository
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
- 
         public IEnumerable<Cartao> GetEncarregados( string codigo)
         {
             List<Cartao> encarregados = new List<Cartao>();
@@ -47,10 +46,8 @@ namespace SistemasdeTarefas.Repository
                     }
                 }
             }
-
             return encarregados;
         }
-
         public IEnumerable<Cartao> GetEstudantes(string codigo)
         {
             List<Cartao> estudantes = new List<Cartao>();
@@ -89,7 +86,6 @@ namespace SistemasdeTarefas.Repository
 
             return estudantes;
         }
-
         public IEnumerable<Cartao> GetEstudantesPeloNome(string nome)
         {
             List<Cartao> estudantes = new List<Cartao>();

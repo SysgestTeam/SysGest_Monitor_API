@@ -176,8 +176,8 @@ namespace SistemasdeTarefas.Repository
 
                     string query = @"
                         INSERT INTO TABARTIGOS
-                        (CODIGO, NOME, IDFAMILIA, IDUNIDADE, PRCVENDA, IDTAXAIPC, STOCK, FOTO, IDUSR, IdTaxaImposto, ValorTaxa, IdArmazem, IsDepositoSaldo, IsMulta)
-                        VALUES (@codigo, @nome, @idFamilia, @idUnidade, @prcVenda, @idTaxaIpc, @stock, @foto, @idUsr, @idTaxaImposto, @valorTaxa, @idArmazem, @isDepositoSaldo, @isMulta)";
+                        (CODIGO, NOME, IDFAMILIA, IDUNIDADE, PRCVENDA, IDTAXAIPC, STOCK, FOTO, IDUSR, IdTaxaImposto, ValorTaxa, IdArmazem, IsDepositoSaldo, IsMulta, SERVICO, INACTIVO)
+                        VALUES (@codigo, @nome, @idFamilia, @idUnidade, @prcVenda, @idTaxaIpc, @stock, @foto, @idUsr, @idTaxaImposto, @valorTaxa, @idArmazem, @isDepositoSaldo, @isMulta,1,0)";
 
                     using (SqlCommand cmd = new SqlCommand(query, connection))
                     {
