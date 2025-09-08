@@ -9,6 +9,7 @@
         public string CodigoCartao { get; set; }
         public decimal saldo { get; set; }
         public decimal limiteDiario { get; set; }
+        public decimal ValorDiaConsumido { get; set; }
         public bool Bloqueado { get; set; }
         public bool? NaoBloqueavel { get; set; }
     }

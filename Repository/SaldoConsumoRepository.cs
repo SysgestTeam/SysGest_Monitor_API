@@ -438,15 +438,15 @@ namespace SistemasdeTarefas.Repository
         }
 
         public async Task InserirPosCafeteriaAsync(
-    decimal quantidade,
-    decimal precoUnidade,
-    string nomeItem,
-    int idFamilia,
-    int idArtigo,
-    int idSaldoConsumo,
-    bool anular,
-    int idUser,
-    int idaluno)
+                decimal quantidade,
+                decimal precoUnidade,
+                string nomeItem,
+                int idFamilia,
+                int idArtigo,
+                int idSaldoConsumo,
+                bool anular,
+                int idUser,
+                int idaluno)
         {
             try
             {
@@ -548,7 +548,6 @@ namespace SistemasdeTarefas.Repository
 
             return SaldoConsumos;
         }
-
         public IEnumerable<ConsumoPosDto> Listas_ConsumoPOs()
         {
             List<ConsumoPosDto> lista = new List<ConsumoPosDto>();
@@ -592,8 +591,6 @@ namespace SistemasdeTarefas.Repository
 
             return lista;
         }
-
-
         public IEnumerable<Ticket> ListTicket(int numAluno)
         {
             List<Ticket> SaldoConsumos = new List<Ticket>();
@@ -815,7 +812,6 @@ namespace SistemasdeTarefas.Repository
                 }
             }
         }
-
         public void RemoverSaldoPOS(int idsaldo, bool apagado)
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))
@@ -878,7 +874,6 @@ namespace SistemasdeTarefas.Repository
                 }
             }
         }
-
         private string ManipulateName(string fullName)
         {
             var nameParts = fullName.Split(' ');

@@ -817,7 +817,6 @@ namespace SistemasdeTarefas.Repository
 
             return alunos;
         }
-
         public IEnumerable<Existencia_Card> GetAlunoSaldoPorNum(string codigo)
         {
             List<Existencia_Card> classes = new List<Existencia_Card>();
@@ -827,56 +826,62 @@ namespace SistemasdeTarefas.Repository
                 connection.Open();
 
                 string sqlQuery = @$"WITH Matriculados AS ( 
-                                            SELECT 
-                                                TABALUNOS.FOTO, 
-                                                TABALUNOS.IDALUNO, 
-                                                NUMALUNO, 
-                                                TABALUNOS.NOME AS ALUNO, 
-                                                TABTURMAS.NOME AS NomeTurma,                               
-                                                TABALUNOS.LimiteSaldoDia, 
-                                                IDANOLECTIVO
-                                            FROM 
-                                                TABALUNOS 
-                                            INNER JOIN TABMATRICULAS ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
-                                            INNER JOIN TABTURMAS ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA    
-                                            LEFT JOIN TABSTATUS s ON TABALUNOS.IDSTATUS = s.IDSTATUS 
-                                            WHERE 
-                                                TABALUNOS.INACTIVO = 0 
-                                                AND TABMATRICULAS.IDSTATUS IN (2,4) 
-                                                AND TABTURMAS.NOME NOT IN ('FUNCIONÁRIO', 'DOCENTE')
-                                                AND TABMATRICULAS.IDANOLECTIVO = (SELECT MAX(IDANO) FROM TABANOSLECTIVOS)
-                                        )
-                                        SELECT 
-                                            UPPER(SUBSTRING(ALUNO, 1, CHARINDEX(' ', ALUNO + ''))) 
-                                                + ' ' + 
-                                            UPPER(REVERSE(SUBSTRING(REVERSE(ALUNO), 0, CHARINDEX(' ', REVERSE(ALUNO))))) AS Nome, 
-                                            CodigoCartao,
-                                            NomeTurma,
-                                            FOTO,
-                                            Matriculados.NumAluno,
-                                            Saldo = ISNULL((
-                                                        SELECT SUM(DepValue) 
-                                                        FROM DepSaldos 
-                                                        WHERE idaluno = Matriculados.IDALUNO 
-                                                            AND Anulado = 0 
-                                                            AND Deleted = 0
-                                                    ), 0)
-                                                 - ISNULL((
-                                                        SELECT SUM(UsedValue) 
-                                                        FROM SaldosConsumos 
-                                                        WHERE idaluno = Matriculados.IDALUNO 
-                                                            AND Anulado = 0 
-                                                            AND Deleted = 0
-                                                    ), 0),
-													LimiteSaldoDia
-                                        FROM 
-                                             Matriculados
-                                        INNER JOIN 
-                                            CartaoAluno ON Matriculados.IDALUNO = CartaoAluno.IDALUNO
-                                                        AND Matriculados.IDANOLECTIVO = CartaoAluno.IdAno
-                                                        AND CartaoAluno.CodigoCartao = '{codigo}'
+                            SELECT 
+                                TABALUNOS.FOTO, 
+                                TABALUNOS.IDALUNO, 
+                                NUMALUNO, 
+                                TABALUNOS.NOME AS ALUNO, 
+                                TABTURMAS.NOME AS NomeTurma,                               
+                                TABALUNOS.LimiteSaldoDia, 
+                                IDANOLECTIVO
+                            FROM 
+                                TABALUNOS 
+                            INNER JOIN TABMATRICULAS ON TABMATRICULAS.IDALUNO = TABALUNOS.IDALUNO 
+                            INNER JOIN TABTURMAS ON TABTURMAS.IDTURMA = TABMATRICULAS.IDTURMA    
+                            LEFT JOIN TABSTATUS s ON TABALUNOS.IDSTATUS = s.IDSTATUS 
+                            WHERE 
+                                TABALUNOS.INACTIVO = 0 
+                                AND TABMATRICULAS.IDSTATUS IN (2,4) 
+                                AND TABTURMAS.NOME NOT IN ('FUNCIONÁRIO', 'DOCENTE')
+                                AND TABMATRICULAS.IDANOLECTIVO = (SELECT MAX(IDANO) FROM TABANOSLECTIVOS)
+                        )
+                        SELECT 
+                            UPPER(SUBSTRING(ALUNO, 1, CHARINDEX(' ', ALUNO + ''))) 
+                                + ' ' + 
+                            UPPER(REVERSE(SUBSTRING(REVERSE(ALUNO), 0, CHARINDEX(' ', REVERSE(ALUNO))))) AS Nome, 
+                            CodigoCartao,
+                            NomeTurma,
+                            FOTO,
+                            Matriculados.NumAluno,
+                            Saldo = ISNULL((
+                                        SELECT SUM(DepValue) 
+                                        FROM DepSaldos 
+                                        WHERE idaluno = Matriculados.IDALUNO 
+                                            AND Anulado = 0 
+                                            AND Deleted = 0
+                                    ), 0)
+                                 - ISNULL((
+                                        SELECT SUM(UsedValue) 
+                                        FROM SaldosConsumos 
+                                        WHERE idaluno = Matriculados.IDALUNO 
+                                            AND Anulado = 0 
+                                            AND Deleted = 0
+                                    ), 0),
+                            LimiteSaldoDia,
+                            ValorDiaConsumido = ISNULL((
+                                        SELECT SUM(TotalValor) 
+                                        FROM TABPOSCAFETERIA 
+                                        WHERE IdAluno = Matriculados.IDALUNO
+                                          AND CAST(DataCriacao AS DATE) = CAST(GETDATE() AS DATE)
+                                    ), 0)
+                        FROM 
+                             Matriculados
+                        INNER JOIN 
+                            CartaoAluno ON Matriculados.IDALUNO = CartaoAluno.IDALUNO
+                                        AND Matriculados.IDANOLECTIVO = CartaoAluno.IdAno
+                                        AND CartaoAluno.CodigoCartao = '{codigo}'
+                        ORDER BY Nome;
 
-                                        ORDER BY Nome
 
                                     ";
 
@@ -894,6 +899,7 @@ namespace SistemasdeTarefas.Repository
                                 Foto = reader.IsDBNull(3) ? null : (byte[])reader.GetValue(3),
                                 saldo = reader.GetDecimal(5),
                                 limiteDiario = reader.GetDecimal(6),
+                                ValorDiaConsumido = reader.GetDecimal(7),
                             };
 
                             classes.Add(classe);
@@ -904,7 +910,6 @@ namespace SistemasdeTarefas.Repository
 
             return classes;
         }
-
         public IEnumerable<TabAluno> GetAlunosFiltro(int? idclasse = null, int? idturma = null)
         {
             List<TabAluno> alunos = new List<TabAluno>();

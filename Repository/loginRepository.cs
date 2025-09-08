@@ -442,7 +442,6 @@ namespace SistemasdeTarefas.Repository
 
             return resultadoLogin;
         }
-
         public async Task<int> GetIdUserAsync(string user)
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))

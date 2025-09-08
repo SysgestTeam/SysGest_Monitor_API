@@ -8,7 +8,6 @@ namespace SistemasdeTarefas.Repository
     public class FinancaRepository : IFinancaRepository
     {
         private readonly string _connectionString;
-
         public FinancaRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
@@ -105,7 +104,6 @@ namespace SistemasdeTarefas.Repository
 
             return lista;
         }
-
         public async Task<IEnumerable<AlunoDossierLin>> GetAlunoDossierLinCTByIdAlunoDossierCT(int StudentDossierCTId)
         {
             var lista = new List<AlunoDossierLin>();
@@ -547,8 +545,6 @@ namespace SistemasdeTarefas.Repository
 
             return lista;
         }
-
-
         public async Task<IEnumerable<AlunoDossier>> ListAlunoDossier(int number)
         {
             var alunos = new List<AlunoDossier>();

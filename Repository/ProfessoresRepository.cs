@@ -7,12 +7,10 @@ namespace SistemasdeTarefas.Repository
     public class ProfessoresRepository : IProfessoresRepository
     {
         private readonly string _connectionString;
-
         public ProfessoresRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
-
         public IEnumerable<Funcionario> GetAll()
         {
             List<Funcionario> funcionarios = new List<Funcionario>();
@@ -50,7 +48,6 @@ namespace SistemasdeTarefas.Repository
 
             return funcionarios;
         }
-
         public IEnumerable<Funcionario> GetComCartao()
         {
             List<Funcionario> funcionarios = new List<Funcionario>();
@@ -96,7 +93,6 @@ namespace SistemasdeTarefas.Repository
 
             return funcionarios;
         }
-
         public IEnumerable<Funcionario> GetProfessoresComFotos()
         {
             List<Funcionario> funcionarios = new List<Funcionario>();
@@ -134,7 +130,6 @@ namespace SistemasdeTarefas.Repository
 
             return funcionarios;
         }
-
         public IEnumerable<Funcionario> GetProfessoresSemFoto()
         {
             List<Funcionario> funcionarios = new List<Funcionario>();
@@ -172,7 +167,6 @@ namespace SistemasdeTarefas.Repository
 
             return funcionarios;
         }
-
         public IEnumerable<Funcionario> GetSemCartao()
         {
             List<Funcionario> funcionarios = new List<Funcionario>();
